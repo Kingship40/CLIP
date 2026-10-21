@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Output
+dist/
+build/
+
+# Temporary Media & Private Job Storage
+.temp_media/
+*.mp4
+*.webm
+*.avi
+*.mov
+*.mkv
+!tests/fixtures/*.mp4
+
+# Test Outputs
+tests/output/
+
+# Logs & Environment
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Antigravity artifacts & tasks
+.system_generated/
