@@ -120,27 +120,28 @@ export const ClipEditorPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Top Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-3">
           <Link
             to={`/dashboard/projects/${foundProject.id}`}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-900 transition-colors"
+            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
+            style={{ color: 'var(--text-muted)' }}
             title="Return to project workspace"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight truncate max-w-md">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate max-w-md" style={{ color: 'var(--text-primary)' }}>
                 {clip.title}
               </h1>
               {isDirty && (
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 font-semibold px-2 py-0.5 rounded-full border border-amber-500/30">
+                <span className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold px-2 py-0.5 rounded-full border border-amber-500/30">
                   Unsaved Edits
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
               Project: {foundProject.name} • Master Video: {foundProject.sourceVideo.name}
             </p>
           </div>
@@ -173,7 +174,7 @@ export const ClipEditorPage: React.FC = () => {
             variant="secondary"
             size="sm"
             onClick={() => setIsExportOpen(true)}
-            leftIcon={<Download className="w-4 h-4 text-brand-400" />}
+            leftIcon={<Download className="w-4 h-4 text-brand-500" />}
           >
             Export
           </Button>
@@ -194,7 +195,13 @@ export const ClipEditorPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (7/12): HTML5 Video Player + Dual-Handle Interactive Timeline */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-dark-900 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col items-center">
+          <div
+            className="border rounded-2xl p-4 sm:p-6 flex flex-col items-center shadow-sm"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border)',
+            }}
+          >
             <VideoPlayer
               clip={clip}
               currentTime={currentTime}
@@ -220,18 +227,24 @@ export const ClipEditorPage: React.FC = () => {
         </div>
 
         {/* Right Column (5/12): Tabs for Subtitles & Clip Metadata */}
-        <div className="lg:col-span-5 bg-dark-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-5">
+        <div
+          className="lg:col-span-5 border rounded-2xl p-4 sm:p-6 space-y-5 shadow-sm"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            borderColor: 'var(--border)',
+          }}
+        >
           {/* Editor Tabs */}
-          <div className="flex border-b border-slate-800 text-xs font-semibold">
+          <div className="flex border-b text-xs font-semibold" style={{ borderColor: 'var(--border)' }}>
             <button
               onClick={() => setActiveTab('captions')}
               className={`pb-3 pr-4 flex items-center gap-2 border-b-2 -mb-px transition-colors ${
                 activeTab === 'captions'
-                  ? 'border-brand-500 text-white'
-                  : 'border-transparent text-slate-400 hover:text-white'
+                  ? 'border-brand-500 text-brand-600 dark:text-white'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
-              <Type className="w-4 h-4 text-brand-400" />
+              <Type className="w-4 h-4 text-brand-500" />
               <span>Captions & Styling</span>
             </button>
 
@@ -239,11 +252,11 @@ export const ClipEditorPage: React.FC = () => {
               onClick={() => setActiveTab('metadata')}
               className={`pb-3 px-4 flex items-center gap-2 border-b-2 -mb-px transition-colors ${
                 activeTab === 'metadata'
-                  ? 'border-brand-500 text-white'
-                  : 'border-transparent text-slate-400 hover:text-white'
+                  ? 'border-brand-500 text-brand-600 dark:text-white'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
-              <FileText className="w-4 h-4 text-cyan-400" />
+              <FileText className="w-4 h-4 text-cyan-500" />
               <span>Title, Hashtags & Aspect</span>
             </button>
           </div>

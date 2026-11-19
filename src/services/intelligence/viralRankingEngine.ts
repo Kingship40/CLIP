@@ -146,6 +146,31 @@ export class ViralRankingEngine {
       }
     }
 
+    // Relaxation Pass: If accepted.length < maxClips, recover distinct candidates that were suppressed only by strict thresholds
+    if (accepted.length < maxClips && suppressed.length > 0) {
+      const candidatesToReconsider = [...suppressed];
+      candidatesToReconsider.sort((a, b) => b.candidate.overallScore - a.candidate.overallScore);
+
+      for (const item of candidatesToReconsider) {
+        if (accepted.length >= maxClips) break;
+
+        const cand = item.candidate;
+        // Check if relaxed criteria allows inclusion
+        const conflictsWithAccepted = accepted.some((acc) => {
+          const iou = this.calculateTemporalIoU(cand.startTime, cand.endTime, acc.startTime, acc.endTime);
+          const startDiff = Math.abs(cand.startTime - acc.startTime);
+          const { similarity: textSim } = this.calculateTranscriptSimilarity(cand.transcriptText, acc.transcriptText);
+          return iou > 0.45 || startDiff < 4.0 || textSim > 0.70;
+        });
+
+        if (!conflictsWithAccepted) {
+          accepted.push(cand);
+          const idx = suppressed.findIndex((s) => s.candidate.id === cand.id);
+          if (idx !== -1) suppressed.splice(idx, 1);
+        }
+      }
+    }
+
     // Evaluate all remaining unselected candidates in pool to check for duplicates of accepted clips
     for (const remaining of pool) {
       for (const acc of accepted) {

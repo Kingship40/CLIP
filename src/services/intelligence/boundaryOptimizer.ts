@@ -20,10 +20,12 @@ export interface OptimizedBoundary {
 }
 
 export interface BoundarySearchOptions {
-  minDuration?: number; // e.g. 12s
-  maxDuration?: number; // e.g. 50s
-  preferredDuration?: number; // e.g. 30s
+  minDuration?: number; // e.g. 15s
+  maxDuration?: number; // e.g. 30s
+  preferredDuration?: number; // e.g. 22s
+  exactDuration?: number; // e.g. 30s exact target
   shotBoundaries?: number[]; // Timestamps of visual scene cuts
+  sourceTotalDuration?: number;
 }
 
 const TRAILING_DANGLING_WORDS = new Set([
@@ -154,7 +156,7 @@ export class BoundaryOptimizer {
       }
     }
 
-    // Ensure duration strictly satisfies minDuration by expanding if video boundary permitted
+    // Ensure duration strictly satisfies minDuration by expanding subtitle window if possible
     while (candidateEndTime - startTime < minDur && bestStartIndex > 0) {
       bestStartIndex--;
       startTime = allSubtitles[bestStartIndex].start;
@@ -170,10 +172,55 @@ export class BoundaryOptimizer {
       candidateEndTime = allSubtitles[bestEndIndex].end;
     }
 
-    // 4. Extract bounded subtitles
-    const boundedSubs = allSubtitles.slice(bestStartIndex, bestEndIndex + 1);
-    const actualDuration = Math.round((candidateEndTime - startTime) * 10) / 10;
-    const fullTranscript = boundedSubs.map((s) => s.text).join(' ').trim();
+    let finalStart = startTime;
+    let finalEnd = candidateEndTime;
+    const totalVideoLimit = options.sourceTotalDuration || Infinity;
+
+    // Hard Constraint Enforcement:
+    // If exactDuration is specified, align exact duration
+    if (options.exactDuration && options.exactDuration > 0) {
+      const targetExact = Math.min(totalVideoLimit, options.exactDuration);
+      const currentSpan = finalEnd - finalStart;
+      const center = finalStart + currentSpan / 2;
+      finalStart = Math.max(0, center - targetExact / 2);
+      finalEnd = finalStart + targetExact;
+      if (finalEnd > totalVideoLimit) {
+        finalEnd = totalVideoLimit;
+        finalStart = Math.max(0, finalEnd - targetExact);
+      }
+    } else {
+      // Range Enforcement: strictly clamp to [minDur, maxDur]
+      if (finalEnd - finalStart < minDur) {
+        const needed = minDur - (finalEnd - finalStart);
+        finalStart = Math.max(0, finalStart - needed / 2);
+        finalEnd = Math.min(totalVideoLimit, finalEnd + needed / 2);
+
+        if (finalEnd - finalStart < minDur && finalStart > 0) {
+          finalStart = Math.max(0, finalEnd - minDur);
+        }
+        if (finalEnd - finalStart < minDur && finalEnd < totalVideoLimit) {
+          finalEnd = Math.min(totalVideoLimit, finalStart + minDur);
+        }
+      } else if (finalEnd - finalStart > maxDur) {
+        const excess = (finalEnd - finalStart) - maxDur;
+        finalStart = Math.max(0, finalStart + excess / 2);
+        finalEnd = finalStart + maxDur;
+        if (finalEnd > totalVideoLimit) {
+          finalEnd = totalVideoLimit;
+          finalStart = Math.max(0, finalEnd - maxDur);
+        }
+      }
+    }
+
+    // 4. Extract bounded subtitles that overlap with [finalStart, finalEnd]
+    const boundedSubs = allSubtitles.filter(
+      (s) => s.end > finalStart && s.start < finalEnd
+    );
+    const actualDuration = Math.round((finalEnd - finalStart) * 100) / 100;
+    const fullTranscript = (boundedSubs.length > 0 ? boundedSubs : allSubtitles.slice(bestStartIndex, bestEndIndex + 1))
+      .map((s) => s.text)
+      .join(' ')
+      .trim();
 
     // 5. Evaluate Boundary Quality
     let boundaryScore = 70;
@@ -189,16 +236,16 @@ export class BoundaryOptimizer {
     if (isDanglingEnd) boundaryScore -= 20;
 
     // Check dead air between end of last speech and boundary
-    const trimmedDeadAir = Math.max(0, candidateEndTime - (boundedSubs[boundedSubs.length - 1]?.end || candidateEndTime));
+    const trimmedDeadAir = Math.max(0, finalEnd - (boundedSubs[boundedSubs.length - 1]?.end || finalEnd));
     if (trimmedDeadAir > 0.5) boundaryScore -= 8;
 
     boundaryScore = Math.min(100, Math.max(30, boundaryScore));
 
     return {
-      startTime: Math.round(startTime * 100) / 100,
-      endTime: Math.round(candidateEndTime * 100) / 100,
+      startTime: Math.round(finalStart * 100) / 100,
+      endTime: Math.round(finalEnd * 100) / 100,
       duration: actualDuration,
-      subtitles: boundedSubs,
+      subtitles: boundedSubs.length > 0 ? boundedSubs : allSubtitles.slice(bestStartIndex, bestEndIndex + 1),
       transcriptText: fullTranscript,
       boundaryScore,
       startsOnSentence,

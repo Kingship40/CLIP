@@ -48,30 +48,46 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-dark-950/80 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        className="fixed inset-0 bg-dark-950/80 backdrop-blur-sm transition-opacity"        onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Dialog */}
       <div
         className={cn(
-          'relative w-full bg-dark-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden z-10 transition-all transform animate-in fade-in zoom-in-95 duration-150',
+          'relative w-full rounded-2xl shadow-2xl overflow-hidden z-10 transition-all transform animate-in fade-in zoom-in-95 duration-150 border',
           maxWidths[maxWidth]
         )}
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+          color: 'var(--text-primary)',
+        }}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
         {(title || description) && (
-          <div className="flex items-start justify-between p-5 sm:p-6 border-b border-slate-800/80">
+          <div
+            className="flex items-start justify-between p-5 sm:p-6 border-b"
+            style={{ borderColor: 'var(--border)' }}
+          >
             <div>
-              {title && <h3 className="text-lg font-semibold text-white tracking-tight">{title}</h3>}
-              {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
+              {title && (
+                <h3 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                  {title}
+                </h3>
+              )}
+              {description && (
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                  {description}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800 transition-colors"
+              className="p-1 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
+              style={{ color: 'var(--text-muted)' }}
               aria-label="Close dialog"
             >
               <X className="w-5 h-5" />

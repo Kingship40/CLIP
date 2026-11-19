@@ -26,17 +26,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-950 disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+      'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-page)] disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
     const variants = {
       primary:
         'bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 focus-visible:ring-brand-400 hover:shadow-brand-500/30',
       secondary:
-        'bg-dark-800 hover:bg-dark-750 text-slate-200 border border-slate-700/60 hover:border-slate-600 focus-visible:ring-slate-400',
+        'bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface-2)] text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--border)] focus-visible:ring-slate-400',
       outline:
-        'bg-transparent border border-slate-700 text-slate-300 hover:bg-dark-850 hover:text-white hover:border-slate-500 focus-visible:ring-brand-400',
+        'bg-transparent border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] focus-visible:ring-brand-400',
       ghost:
-        'bg-transparent hover:bg-dark-800/80 text-slate-300 hover:text-white focus-visible:ring-slate-400',
+        'bg-transparent hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] focus-visible:ring-slate-400',
       danger:
         'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/20 focus-visible:ring-rose-400',
     };

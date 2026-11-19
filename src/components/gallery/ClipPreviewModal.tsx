@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Clip } from '../../types';
 import { Modal } from '../common/Modal';
 import { formatDuration } from '../../utils/formatters';
 import { Sparkles, Edit3 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Link } from 'react-router-dom';
+import { CaptionOverlay } from '../editor/CaptionOverlay';
 
 export interface ClipPreviewModalProps {
   clip: Clip | null;
@@ -18,10 +19,12 @@ export const ClipPreviewModal: React.FC<ClipPreviewModalProps> = ({
   onClose,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     if (isOpen && videoRef.current && clip) {
       videoRef.current.currentTime = clip.startTime;
+      setCurrentTime(clip.startTime);
       videoRef.current.play().catch(() => {});
     }
   }, [isOpen, clip]);
@@ -53,8 +56,11 @@ export const ClipPreviewModal: React.FC<ClipPreviewModalProps> = ({
               playsInline
               className="w-full h-full object-cover"
               onTimeUpdate={() => {
-                if (videoRef.current && videoRef.current.currentTime >= clip.endTime) {
-                  videoRef.current.currentTime = clip.startTime;
+                if (videoRef.current) {
+                  setCurrentTime(videoRef.current.currentTime);
+                  if (videoRef.current.currentTime >= clip.endTime) {
+                    videoRef.current.currentTime = clip.startTime;
+                  }
                 }
               }}
             />
@@ -64,32 +70,42 @@ export const ClipPreviewModal: React.FC<ClipPreviewModalProps> = ({
             </div>
           )}
 
-          {/* Kinetic Caption Mockup Overlay */}
-          {clip.captionSettings.enabled && (
-            <div className="absolute bottom-12 inset-x-4 pointer-events-none text-center">
-              <span className="inline-block px-3 py-1 rounded bg-black/75 text-amber-300 font-extrabold text-sm uppercase tracking-wide shadow-md">
-                {clip.hookSummary.slice(0, 40)}...
-              </span>
+          {/* Synchronized Subtitles Overlay (only shown if not already burned into the video) */}
+          {clip.captionSettings?.enabled && clip.subtitles && clip.subtitles.length > 0 && !clip.subtitledVideoUrl && (
+            <div className="absolute inset-0 pointer-events-none">
+              <CaptionOverlay
+                subtitles={clip.subtitles}
+                currentTime={currentTime}
+                settings={clip.captionSettings}
+                clipStartTime={clip.startTime}
+                clipEndTime={clip.endTime}
+              />
             </div>
           )}
         </div>
 
         {/* Info & Intelligence Rationale */}
-        <div className="p-3.5 rounded-xl bg-dark-950 border border-slate-800 space-y-2 text-xs">
+        <div
+          className="p-3.5 rounded-xl border space-y-2 text-xs"
+          style={{
+            backgroundColor: 'var(--bg-elevated)',
+            borderColor: 'var(--border)',
+          }}
+        >
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1.5 text-amber-300 font-bold">
+                <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Viral Score: {clip.viralScore}/100</span>
                 </span>
                 {clip.category && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                     {clip.category.replace(/_/g, ' ')}
                   </span>
                 )}
               </div>
-              <p className="text-slate-400 font-mono text-[11px]">
+              <p className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
                 {formatDuration(clip.startTime)} – {formatDuration(clip.endTime)} ({formatDuration(clip.duration)})
               </p>
             </div>
@@ -102,29 +118,53 @@ export const ClipPreviewModal: React.FC<ClipPreviewModalProps> = ({
           </div>
 
           {clip.rationale && (
-            <p className="text-[11px] text-slate-300 leading-relaxed border-t border-slate-800/80 pt-2">
-              <strong className="text-cyan-400 font-semibold">AI Selection Rationale: </strong>
+            <p className="text-[11px] leading-relaxed border-t pt-2" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+              <strong className="text-cyan-600 dark:text-cyan-400 font-semibold">AI Selection Rationale: </strong>
               {clip.rationale}
             </p>
           )}
 
           {clip.scoreBreakdown && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 text-[10px]">
-              <div className="bg-dark-900 p-1.5 rounded border border-slate-800/80 text-center">
-                <span className="text-slate-400 block">Hook</span>
-                <span className="font-bold text-amber-300">{clip.scoreBreakdown.hookStrength}%</span>
+              <div
+                className="p-1.5 rounded border text-center"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
+              >
+                <span className="block" style={{ color: 'var(--text-muted)' }}>Hook</span>
+                <span className="font-bold text-amber-600 dark:text-amber-300">{clip.scoreBreakdown.hookStrength}%</span>
               </div>
-              <div className="bg-dark-900 p-1.5 rounded border border-slate-800/80 text-center">
-                <span className="text-slate-400 block">Impact</span>
-                <span className="font-bold text-cyan-300">{clip.scoreBreakdown.emotionalIntellectual}%</span>
+              <div
+                className="p-1.5 rounded border text-center"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
+              >
+                <span className="block" style={{ color: 'var(--text-muted)' }}>Impact</span>
+                <span className="font-bold text-cyan-600 dark:text-cyan-300">{clip.scoreBreakdown.emotionalIntellectual}%</span>
               </div>
-              <div className="bg-dark-900 p-1.5 rounded border border-slate-800/80 text-center">
-                <span className="text-slate-400 block">Clarity</span>
-                <span className="font-bold text-emerald-300">{clip.scoreBreakdown.clarityContext}%</span>
+              <div
+                className="p-1.5 rounded border text-center"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
+              >
+                <span className="block" style={{ color: 'var(--text-muted)' }}>Clarity</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-300">{clip.scoreBreakdown.clarityContext}%</span>
               </div>
-              <div className="bg-dark-900 p-1.5 rounded border border-slate-800/80 text-center">
-                <span className="text-slate-400 block">Payoff</span>
-                <span className="font-bold text-purple-300">{clip.scoreBreakdown.payoffValue}%</span>
+              <div
+                className="p-1.5 rounded border text-center"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
+              >
+                <span className="block" style={{ color: 'var(--text-muted)' }}>Payoff</span>
+                <span className="font-bold text-purple-600 dark:text-purple-300">{clip.scoreBreakdown.payoffValue}%</span>
               </div>
             </div>
           )}

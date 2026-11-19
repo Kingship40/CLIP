@@ -15,6 +15,8 @@ import {
   Sparkles,
   Users,
   Eye,
+  User,
+  Crosshair,
 } from 'lucide-react';
 import { detectSpeakerFaceCentroid, detectSpeakerFaceAdvanced, FaceCentroidResult } from '../../utils/videoHelpers';
 import { facePipelineInstance } from '../../services/face/facePipeline';
@@ -218,70 +220,70 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <span>Face Reframe:</span>
             </span>
 
-            <div className="flex items-center gap-1 bg-dark-900 p-0.5 rounded-lg border border-slate-800">
+            <div className="flex items-center gap-1 bg-[var(--bg-surface)] p-0.5 rounded-lg border border-[var(--border)]">
               <button
                 type="button"
                 onClick={() => handleSelectFraming('auto')}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1 ${
                   framingMode === 'auto'
                     ? 'bg-cyan-500 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
                 title="AI dynamic face tracking"
               >
-                🎯 Auto ({Math.round(facePanX)}%)
+                <Sparkles className="w-3 h-3" /> Auto ({Math.round(facePanX)}%)
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('left')}
-                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
-                  framingMode === 'left' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  framingMode === 'left' ? 'bg-cyan-500 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                👈 Left
+                <User className="w-3 h-3" /> Left
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('center')}
-                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
-                  framingMode === 'center' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  framingMode === 'center' ? 'bg-cyan-500 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                ⊙ Center
+                <Crosshair className="w-3 h-3" /> Center
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('right')}
-                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
-                  framingMode === 'right' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  framingMode === 'right' ? 'bg-cyan-500 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                👉 Right
+                <User className="w-3 h-3" /> Right
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('split-dual')}
-                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
-                  framingMode === 'split-dual' ? 'bg-amber-500 text-white' : 'text-slate-400 hover:text-white'
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  framingMode === 'split-dual' ? 'bg-amber-500 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Dual Speaker Stack"
               >
-                👥 Dual
+                <Users className="w-3 h-3" /> Dual
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('fit-blur')}
-                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors ${
-                  framingMode === 'fit-blur' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors flex items-center gap-1 ${
+                  framingMode === 'fit-blur' ? 'bg-purple-600 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
                 title="Fit full 16:9 with ambient blurred background"
               >
-                🖼️ Fit
+                <Maximize2 className="w-3 h-3" /> Fit
               </button>
             </div>
 
@@ -460,14 +462,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
 
-        {/* Live Caption Overlay Synchronized with Playhead */}
-        <CaptionOverlay
-          subtitles={clip.subtitles}
-          currentTime={currentTime}
-          settings={clip.captionSettings}
-          clipStartTime={clip.startTime}
-          clipEndTime={clip.endTime}
-        />
+        {/* Live Caption Overlay Synchronized with Playhead (rendered if not already permanently burned into video) */}
+        {!clip.subtitledVideoUrl && (
+          <CaptionOverlay
+            subtitles={clip.subtitles}
+            currentTime={currentTime}
+            settings={clip.captionSettings}
+            clipStartTime={clip.startTime}
+            clipEndTime={clip.endTime}
+          />
+        )}
 
         {/* Big Center Play/Pause Overlay Button */}
         <div

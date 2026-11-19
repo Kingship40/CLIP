@@ -29,17 +29,30 @@ export type PlatformCapability =
  * 11 Real import lifecycle states reflecting true backend & AI pipeline status.
  */
 export type IngestionJobStage =
-  | 'checking_link'              // Step 1: Validating URL & SSRF security
-  | 'identifying_platform'       // Step 2: Matching adapter & checking provider syntax
-  | 'checking_authorized_access' // Step 3: Checking authorized source access & platform permissions
-  | 'importing_source_privately' // Step 4: Private backend retrieval into temporary workspace
-  | 'analyzing_video_audio'      // Step 5: Decoding frames & ASR speech tokenization
-  | 'detecting_moments'          // Step 6: 18-category viral moment discovery & scoring
-  | 'generating_clips'           // Step 7: Subject-aware 9:16 vertical cropping & reframing
-  | 'rendering_captions'         // Step 8: Burned-in synchronized caption animation
-  | 'ready_to_download'          // Step 9: Finished clips ready with individual download buttons
-  | 'action_required'            // Step 10: Metadata loaded, creator export or upload needed
-  | 'import_failed';             // Step 11: Unrecoverable failure with clear explanation
+  | 'validating_url'             // Step 1: Validating URL & SSRF security
+  | 'checking_link'              // Alias for validating_url
+  | 'detecting_platform'         // Step 2: Matching adapter & checking provider syntax
+  | 'identifying_platform'       // Alias for detecting_platform
+  | 'checking_video_access'      // Step 3: Checking authorized source access & platform permissions
+  | 'checking_authorized_access' // Alias for checking_video_access
+  | 'extracting_metadata'        // Step 4: Extracting metadata
+  | 'retrieving_metadata'        // Alias for extracting_metadata
+  | 'retrieving_video'           // Step 5: Retrieving authorized video stream
+  | 'importing_source_privately' // Alias for retrieving_video
+  | 'preparing_video'            // Step 6: Normalizing video container, codecs & timestamps
+  | 'analyzing_content'          // Step 7: Decoding frames & ASR speech tokenization
+  | 'analyzing_video_audio'      // Alias for analyzing_content
+  | 'detecting_highlights'       // Step 8: 18-category viral moment discovery & scoring
+  | 'detecting_moments'          // Alias for detecting_highlights
+  | 'generating_clips'           // Step 9: Subject-aware 9:16 vertical cropping & reframing
+  | 'generating_subtitles'       // Step 10: Automatic VEED / Whisper caption sync & burning
+  | 'rendering_captions'         // Alias for generating_subtitles
+  | 'rendering_final_videos'     // Step 11: Exporting finalized MP4 deliverables
+  | 'ready_to_download'          // Step 12: Finished clips ready with individual download buttons
+  | 'completed'                  // Alias for ready_to_download
+  | 'action_required'            // Step 13: Metadata loaded, creator export or upload needed
+  | 'import_failed'              // Step 14: Unrecoverable failure with clear explanation
+  | 'failed';                    // Alias for import_failed
 
 /**
  * Backwards compatibility union with previous stage names.

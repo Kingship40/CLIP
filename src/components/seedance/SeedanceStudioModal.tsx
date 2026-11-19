@@ -145,8 +145,8 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-white font-extrabold tracking-tight">Project Seedance-2.5</span>
-            <span className="ml-2 text-[10px] font-bold uppercase bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">
+            <span className="font-extrabold tracking-tight text-[var(--text-primary)] dark:text-white">Project Seedance-2.5</span>
+            <span className="ml-2 text-[10px] font-bold uppercase bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30 px-2 py-0.5 rounded-full">
               Joint Audiovisual DiT
             </span>
           </div>
@@ -163,29 +163,29 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
           </div>
 
           <div className="space-y-1">
-            <h4 className="text-lg font-bold text-white">
+            <h4 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">
               Solving Joint Audiovisual Flow Matching ODE
             </h4>
-            <p className="text-xs text-cyan-300 font-mono">
+            <p className="text-xs text-cyan-600 dark:text-cyan-300 font-mono font-bold">
               {activeJob.currentStage}
             </p>
           </div>
 
-          <div className="w-full bg-dark-950 rounded-full h-3 border border-slate-800 overflow-hidden">
+          <div className="w-full bg-[var(--bg-surface-2)] dark:bg-dark-950 rounded-full h-3 border border-[var(--border)] dark:border-slate-800 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-400 via-brand-500 to-purple-500 transition-all duration-300 shadow-glow-brand"
+              className="h-full bg-gradient-to-r from-cyan-500 via-brand-500 to-purple-600 transition-all duration-300 shadow-sm"
               style={{ width: `${activeJob.progressPercentage}%` }}
             />
           </div>
 
-          <div className="p-3 bg-dark-950 rounded-xl border border-slate-800 text-xs text-slate-400 grid grid-cols-2 gap-3">
+          <div className="p-3.5 bg-[var(--bg-surface-2)] dark:bg-dark-950 rounded-xl border border-[var(--border)] dark:border-slate-800 text-xs text-[var(--text-secondary)] dark:text-slate-400 grid grid-cols-2 gap-3 shadow-sm">
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">Engine Architecture</span>
-              <strong className="text-slate-200">48-Layer DiT • 3D-RoPE</strong>
+              <span className="text-[var(--text-muted)] dark:text-slate-500 block text-[10px] font-bold uppercase">Engine Architecture</span>
+              <strong className="text-[var(--text-primary)] dark:text-slate-200 font-bold">48-Layer DiT • 3D-RoPE</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[10px] uppercase">AV Synchronization</span>
-              <strong className="text-emerald-400">Microsecond Native Sync</strong>
+              <span className="text-[var(--text-muted)] dark:text-slate-500 block text-[10px] font-bold uppercase">AV Synchronization</span>
+              <strong className="text-emerald-600 dark:text-emerald-400 font-bold">Microsecond Native Sync</strong>
             </div>
           </div>
         </div>
@@ -194,48 +194,48 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
           {/* Prompt Section */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="font-semibold uppercase tracking-wider text-slate-300 text-[11px]">
+              <label className="font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 text-[11px]">
                 Multimodal Prompt with Reference Tagging:
               </label>
-              <span className="text-[10px] text-slate-400">Up to 50 Active Slots</span>
+              <span className="text-[10px] font-medium text-[var(--text-secondary)] dark:text-slate-400">Up to 50 Active Slots</span>
             </div>
 
             <textarea
               rows={4}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="w-full bg-dark-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+              className="w-full bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 rounded-xl p-3 text-xs text-[var(--text-primary)] dark:text-slate-100 placeholder:text-[var(--text-muted)] dark:placeholder:text-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm font-medium leading-relaxed"
               placeholder="Describe your scene and reference slot bindings (e.g. @Ref_Image_1 walks through...)"
             />
 
             {/* Quick Tag Pills */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[10px] text-slate-500 font-semibold uppercase">Insert Tags:</span>
+              <span className="text-[10px] text-[var(--text-secondary)] dark:text-slate-500 font-bold uppercase">Insert Tags:</span>
               <button
                 type="button"
                 onClick={() => handleInsertTag('@Ref_Image_1')}
-                className="px-2 py-0.5 rounded bg-brand-500/15 border border-brand-500/30 text-brand-300 font-mono hover:bg-brand-500/30 transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-[#EAE8FF] dark:bg-brand-500/15 border border-brand-200 dark:border-brand-500/30 text-[#5145DE] dark:text-brand-300 font-mono font-semibold text-[11px] hover:bg-brand-100 dark:hover:bg-brand-500/30 transition-colors shadow-sm"
               >
                 @Ref_Image_1 (Face)
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTag('@Ref_Image_2')}
-                className="px-2 py-0.5 rounded bg-brand-500/15 border border-brand-500/30 text-brand-300 font-mono hover:bg-brand-500/30 transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-[#EAE8FF] dark:bg-brand-500/15 border border-brand-200 dark:border-brand-500/30 text-[#5145DE] dark:text-brand-300 font-mono font-semibold text-[11px] hover:bg-brand-100 dark:hover:bg-brand-500/30 transition-colors shadow-sm"
               >
                 @Ref_Image_2 (Costume)
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTag('@Ref_Video_1')}
-                className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-mono hover:bg-cyan-500/30 transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-cyan-50 dark:bg-cyan-500/15 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-mono font-semibold text-[11px] hover:bg-cyan-100 dark:hover:bg-cyan-500/30 transition-colors shadow-sm"
               >
                 @Ref_Video_1 (Camera Motion)
               </button>
               <button
                 type="button"
                 onClick={() => handleInsertTag('@Ref_Audio_1')}
-                className="px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/30 text-purple-300 font-mono hover:bg-purple-500/30 transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 font-mono font-semibold text-[11px] hover:bg-purple-100 dark:hover:bg-purple-500/30 transition-colors shadow-sm"
               >
                 @Ref_Audio_1 (Voice Timbre)
               </button>
@@ -243,44 +243,44 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
           </div>
 
           {/* Reference Conditioning Matrix (Images, Videos, Audios) */}
-          <div className="p-3.5 rounded-xl bg-dark-950 border border-slate-800 space-y-2.5">
+          <div className="p-3.5 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 space-y-2.5 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-white flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-bold text-[var(--text-primary)] dark:text-white flex items-center gap-1.5 text-xs">
+                <Layers className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>Active Multimodal Slots ({images.length + videos.length + audios.length}/50)</span>
               </span>
-              <span className="text-[10px] text-emerald-400 font-semibold uppercase">Cross-Slot Leakage Masked</span>
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">Cross-Slot Leakage Masked</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
               {images.map((img) => (
-                <div key={img.tag} className="p-2 rounded-lg bg-dark-900 border border-slate-800 flex items-center gap-2">
+                <div key={img.tag} className="p-2 rounded-lg bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 flex items-center gap-2 shadow-sm">
                   <img src={img.thumbnailUrl} alt={img.name} className="w-8 h-8 rounded object-cover shrink-0" />
                   <div className="truncate">
-                    <span className="font-mono text-brand-400 font-bold block">{img.tag}</span>
-                    <span className="text-slate-400 text-[10px] truncate block">{img.name}</span>
+                    <span className="font-mono text-[#5145DE] dark:text-brand-400 font-bold block">{img.tag}</span>
+                    <span className="text-[var(--text-secondary)] dark:text-slate-400 text-[10px] truncate block font-medium">{img.name}</span>
                   </div>
                 </div>
               ))}
               {videos.map((vid) => (
-                <div key={vid.tag} className="p-2 rounded-lg bg-dark-900 border border-slate-800 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0 font-bold">
+                <div key={vid.tag} className="p-2 rounded-lg bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 flex items-center gap-2 shadow-sm">
+                  <div className="w-8 h-8 rounded bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 font-bold">
                     <Video className="w-4 h-4" />
                   </div>
                   <div className="truncate">
-                    <span className="font-mono text-cyan-400 font-bold block">{vid.tag}</span>
-                    <span className="text-slate-400 text-[10px] truncate block">{vid.name}</span>
+                    <span className="font-mono text-cyan-700 dark:text-cyan-400 font-bold block">{vid.tag}</span>
+                    <span className="text-[var(--text-secondary)] dark:text-slate-400 text-[10px] truncate block font-medium">{vid.name}</span>
                   </div>
                 </div>
               ))}
               {audios.map((aud) => (
-                <div key={aud.tag} className="p-2 rounded-lg bg-dark-900 border border-slate-800 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 font-bold">
+                <div key={aud.tag} className="p-2 rounded-lg bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 flex items-center gap-2 shadow-sm">
+                  <div className="w-8 h-8 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 font-bold">
                     <Mic className="w-4 h-4" />
                   </div>
                   <div className="truncate">
-                    <span className="font-mono text-purple-400 font-bold block">{aud.tag}</span>
-                    <span className="text-slate-400 text-[10px] truncate block">{aud.name}</span>
+                    <span className="font-mono text-purple-700 dark:text-purple-400 font-bold block">{aud.tag}</span>
+                    <span className="text-[var(--text-secondary)] dark:text-slate-400 text-[10px] truncate block font-medium">{aud.name}</span>
                   </div>
                 </div>
               ))}
@@ -290,13 +290,13 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
           {/* Configuration Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-400 mb-1.5">
                 Duration (3D-RoPE Stable)
               </label>
               <select
                 value={duration}
                 onChange={(e) => setDuration(parseInt(e.target.value))}
-                className="w-full bg-dark-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none"
+                className="w-full bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 rounded-xl p-2.5 text-xs font-semibold text-[var(--text-primary)] dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm cursor-pointer"
               >
                 <option value={5}>5 seconds</option>
                 <option value={10}>10 seconds</option>
@@ -307,13 +307,13 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-400 mb-1.5">
                 Spoken Dialogue Language
               </label>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as any)}
-                className="w-full bg-dark-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none"
+                className="w-full bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 rounded-xl p-2.5 text-xs font-semibold text-[var(--text-primary)] dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm cursor-pointer"
               >
                 <option value="en">English (US/UK)</option>
                 <option value="ja">Japanese (日本語)</option>
@@ -325,13 +325,13 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-400 mb-1.5">
                 Resolution & Pipeline
               </label>
               <select
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value as any)}
-                className="w-full bg-dark-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none"
+                className="w-full bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 rounded-xl p-2.5 text-xs font-semibold text-[var(--text-primary)] dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm cursor-pointer"
               >
                 <option value="1080p">1080p Full HD (24fps)</option>
                 <option value="4k">4K Ultra HD (30fps)</option>
@@ -341,40 +341,40 @@ export const SeedanceStudioModal: React.FC<SeedanceStudioModalProps> = ({ isOpen
 
           {/* Advanced Structural Guarantees */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-3 rounded-xl bg-dark-950 border border-slate-800">
+            <div className="p-3.5 rounded-xl bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 shadow-sm">
               <Checkbox
                 checked={enableClayStructure}
                 onChange={(e) => setEnableClayStructure(e.target.checked)}
-                label={<span className="font-semibold text-white">Clay-Render Depth Adapter</span>}
+                label={<span className="font-bold text-xs text-[var(--text-primary)] dark:text-white">Clay-Render Depth Adapter</span>}
                 description="Locks camera trajectory and spatial geometry using normal & depth map controlnet branch"
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-dark-950 border border-slate-800">
+            <div className="p-3.5 rounded-xl bg-[var(--bg-surface)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 shadow-sm">
               <Checkbox
                 checked={enableInContextEdit}
                 onChange={(e) => setEnableInContextEdit(e.target.checked)}
-                label={<span className="font-semibold text-white">Localized Timestamp Inpainting</span>}
+                label={<span className="font-bold text-xs text-[var(--text-primary)] dark:text-white">Localized Timestamp Inpainting</span>}
                 description="Modifies only 00:03 to 00:08 while preserving surrounding frames bit-exact"
               />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-            <span className="text-[11px] text-slate-400">
-              Output Aspect: <strong>{aspectRatio}</strong> • Audiovisual Dual-Stream
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-[var(--border)] dark:border-slate-800">
+            <span className="text-xs font-medium text-[var(--text-secondary)] dark:text-slate-400">
+              Output Aspect: <strong className="font-bold text-[var(--text-primary)] dark:text-white">{aspectRatio}</strong> • Audiovisual Dual-Stream
             </span>
 
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={onClose}>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <Button variant="secondary" onClick={onClose} className="font-semibold shadow-sm">
                 Cancel
               </Button>
               <Button
                 variant="primary"
                 onClick={handleGenerate}
                 leftIcon={<Wand2 className="w-4 h-4 text-white" />}
-                className="shadow-glow-cyan bg-gradient-to-r from-cyan-500 to-brand-500 hover:from-cyan-600 hover:to-brand-600"
+                className="shadow-md bg-gradient-to-r from-cyan-600 to-brand-600 hover:from-cyan-700 hover:to-brand-700 font-bold text-white"
               >
                 Generate with Seedance-2.5
               </Button>

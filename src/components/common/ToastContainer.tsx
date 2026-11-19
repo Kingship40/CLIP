@@ -15,10 +15,10 @@ export const ToastContainer: React.FC = () => {
   };
 
   const borders: Record<ToastType, string> = {
-    success: 'border-emerald-500/30 bg-emerald-950/40 text-emerald-200',
-    error: 'border-rose-500/30 bg-rose-950/40 text-rose-200',
-    warning: 'border-amber-500/30 bg-amber-950/40 text-amber-200',
-    info: 'border-brand-500/30 bg-brand-950/40 text-brand-200',
+    success: 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200',
+    error: 'border-rose-500/30 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200',
+    warning: 'border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200',
+    info: 'border-brand-500/30 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200',
   };
 
   return (
@@ -30,12 +30,12 @@ export const ToastContainer: React.FC = () => {
         >
           {icons[toast.type]}
           <div className="flex-1 text-xs">
-            <h4 className="font-semibold text-white text-sm">{toast.title}</h4>
-            {toast.message && <p className="mt-0.5 text-slate-300 leading-relaxed">{toast.message}</p>}
+            <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{toast.title}</h4>
+            {toast.message && <p className="mt-0.5 text-slate-700 dark:text-slate-300 leading-relaxed">{toast.message}</p>}
           </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="text-slate-400 hover:text-white transition-colors -mr-1 -mt-1 p-1 rounded"
+            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors -mr-1 -mt-1 p-1 rounded"
             aria-label="Dismiss notification"
           >
             <X className="w-4 h-4" />

@@ -59,34 +59,54 @@ export class YouTubeImportProvider implements IVideoImportProvider {
       if (pathname.startsWith('/shorts/')) {
         isShorts = true;
         const parts = pathname.split('/').filter(Boolean);
-        const candidateId = parts[1]?.split(/[?&#]/)[0] || null;
+        const candidateId = parts[1]?.split(/[?&#/]/)[0] || null;
         if (candidateId && VIDEO_ID_REGEX.test(candidateId)) {
           return { videoId: candidateId, isShorts: true };
         }
       }
 
-      // 2. Short link: youtu.be/{id}
-      if (host === 'youtu.be' || host.endsWith('.youtu.be')) {
-        const candidateId = pathname.slice(1).split(/[?&#]/)[0] || null;
+      // 2. YouTube Live: youtube.com/live/{id}
+      if (pathname.startsWith('/live/')) {
+        const parts = pathname.split('/').filter(Boolean);
+        const candidateId = parts[1]?.split(/[?&#/]/)[0] || null;
         if (candidateId && VIDEO_ID_REGEX.test(candidateId)) {
           return { videoId: candidateId, isShorts: false };
         }
       }
 
-      // 3. Standard Watch URL: youtube.com/watch?v={id}
-      if (pathname === '/watch') {
+      // 3. Short link: youtu.be/{id}
+      if (host === 'youtu.be' || host.endsWith('.youtu.be')) {
+        const candidateId = pathname.slice(1).split(/[?&#/]/)[0] || null;
+        if (candidateId && VIDEO_ID_REGEX.test(candidateId)) {
+          return { videoId: candidateId, isShorts: false };
+        }
+      }
+
+      // 4. Standard Watch URL: youtube.com/watch?v={id} or /watch/?v={id}
+      if (pathname === '/watch' || pathname === '/watch/') {
         const candidateId = parsed.searchParams.get('v');
         if (candidateId && VIDEO_ID_REGEX.test(candidateId)) {
           return { videoId: candidateId, isShorts: false };
         }
       }
 
-      // 4. Embed link: youtube.com/embed/{id}
-      if (pathname.startsWith('/embed/')) {
+      // 5. Embed link and legacy v: youtube.com/embed/{id} or /v/{id}
+      if (pathname.startsWith('/embed/') || pathname.startsWith('/v/')) {
         const parts = pathname.split('/').filter(Boolean);
-        const candidateId = parts[1]?.split(/[?&#]/)[0] || null;
+        const candidateId = parts[1]?.split(/[?&#/]/)[0] || null;
         if (candidateId && VIDEO_ID_REGEX.test(candidateId)) {
           return { videoId: candidateId, isShorts: false };
+        }
+      }
+
+      // 6. Attribution link: /attribution_link?u=/watch?v={id}
+      if (pathname.startsWith('/attribution_link')) {
+        const u = parsed.searchParams.get('u');
+        if (u) {
+          const innerMatch = u.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+          if (innerMatch && innerMatch[1]) {
+            return { videoId: innerMatch[1], isShorts: false };
+          }
         }
       }
 
@@ -142,10 +162,15 @@ export class YouTubeImportProvider implements IVideoImportProvider {
     let author = 'YouTube Creator';
     let thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-    // Fetch official oEmbed metadata (Public, reliable, requires no API key)
+    // Fetch official oEmbed metadata with timeout protection to prevent hanging indefinitely
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const onUserAbort = () => controller.abort();
+    if (signal) signal.addEventListener('abort', onUserAbort, { once: true });
+
     try {
       const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(cleanUrl)}&format=json`;
-      const response = await fetch(oembedUrl, { signal });
+      const response = await fetch(oembedUrl, { signal: controller.signal });
       if (response.ok) {
         const data = await response.json();
         if (data.title) title = data.title;
@@ -155,7 +180,9 @@ export class YouTubeImportProvider implements IVideoImportProvider {
     } catch (e: any) {
       if (signal?.aborted) throw new Error('Metadata extraction cancelled by user.');
       // Non-fatal: fallback to standard YouTube thumbnail format
-      console.warn('YouTube oEmbed query fallback:', e.message);
+    } finally {
+      clearTimeout(timeoutId);
+      if (signal) signal.removeEventListener('abort', onUserAbort);
     }
 
     // Default duration baseline (Shorts <= 60s, Standard ~180s)

@@ -22,6 +22,7 @@ const OTHER_SOCIAL_HOSTS: Record<string, { name: string; hasOembed: boolean; cap
   'x.com': { name: 'X / Twitter', hasOembed: true, capability: 'metadata_only' },
   'twitch.tv': { name: 'Twitch', hasOembed: false, capability: 'metadata_only' },
   'facebook.com': { name: 'Facebook', hasOembed: false, capability: 'metadata_only' },
+  'fb.watch': { name: 'Facebook', hasOembed: false, capability: 'metadata_only' },
 };
 
 export class OtherSocialImportProvider implements IVideoImportProvider {
@@ -90,6 +91,19 @@ export class OtherSocialImportProvider implements IVideoImportProvider {
     let title = `${name} Video`;
     let author = `${name} Creator`;
     let thumbnailUrl = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=80';
+
+    // Facebook title and identifier resolution
+    if (host.includes('facebook') || host.includes('fb.watch')) {
+      try {
+        const parsed = new URL(cleanUrl);
+        const matchShare = parsed.pathname.match(/\/share\/[vrp]\/([0-9a-zA-Z_-]+)/);
+        const v = parsed.searchParams.get('v');
+        const id = matchShare?.[1] || v || parsed.pathname.split('/').filter(Boolean).pop();
+        if (id) {
+          title = `Facebook Video (${id})`;
+        }
+      } catch {}
+    }
 
     // Vimeo official oEmbed check
     if (host.includes('vimeo')) {

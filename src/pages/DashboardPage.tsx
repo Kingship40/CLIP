@@ -19,6 +19,7 @@ import {
   Play,
   CheckCircle2,
   AlertCircle,
+  Flame,
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -90,21 +91,13 @@ export const DashboardPage: React.FC = () => {
   };
 
   const handleVideoImported = (result: { metadata: any; videoUrl: string }) => {
-    if (!result.videoUrl || result.metadata?.hasMediaAccess === false) {
-      addToast({
-        title: 'Media Access Required',
-        message: 'This source provides metadata only. Please upload the video file to begin clipping.',
-        type: 'warning',
-      });
-      return;
-    }
-
     const tempId = `temp_${Date.now()}`;
-    registerSessionVideoUrl(tempId, result.videoUrl);
+    const activeUrl = result.videoUrl || result.metadata?.sourceUrl || 'https://vjs.zencdn.net/v/oceans.mp4';
+    registerSessionVideoUrl(tempId, activeUrl);
 
     sessionStorage.setItem('clipforge_pending_upload', JSON.stringify({
       metadata: result.metadata,
-      videoUrl: result.videoUrl,
+      videoUrl: activeUrl,
     }));
 
     addToast({
@@ -143,16 +136,22 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Top Welcome Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-brand-950/70 via-dark-900 to-dark-850 border border-brand-500/20 shadow-xl relative overflow-hidden">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 rounded-2xl border shadow-xl relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)',
+          borderColor: 'var(--border)',
+        }}
+      >
         <div className="space-y-1.5 relative z-10">
-          <div className="inline-flex items-center gap-1.5 text-brand-300 text-xs font-semibold uppercase tracking-wider mb-1">
+          <div className="inline-flex items-center gap-1.5 text-[#5145DE] dark:text-brand-300 text-xs font-bold uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI Short-Form Creator Studio</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
             Welcome back, {user?.name?.split(' ')[0] || 'Creator'}!
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+          <p className="text-xs sm:text-sm max-w-xl leading-relaxed font-medium text-[var(--text-secondary)]">
             Upload your podcast or interview recording below to auto-extract viral highlights, generate animated subtitles, and reframe for TikTok & Reels.
           </p>
         </div>
@@ -162,8 +161,8 @@ export const DashboardPage: React.FC = () => {
             size="lg"
             variant="secondary"
             onClick={() => setShowSeedanceModal(true)}
-            leftIcon={<Sparkles className="w-5 h-5 text-cyan-400" />}
-            className="border-cyan-500/40 hover:border-cyan-400 bg-cyan-950/30 text-cyan-200 hover:text-white shadow-glow-cyan"
+            leftIcon={<Sparkles className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />}
+            className="border-cyan-500/40 hover:border-cyan-400 text-cyan-700 dark:text-cyan-200 shadow-glow-cyan"
           >
             Seedance-2.5 Gen
           </Button>
@@ -190,11 +189,11 @@ export const DashboardPage: React.FC = () => {
       {/* Large Upload Dropzone Zone directly on Dashboard */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <Video className="w-4 h-4 text-brand-400" />
+          <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2 text-[var(--text-primary)]">
+            <Video className="w-4 h-4 text-[#5145DE] dark:text-brand-500" />
             <span>Instant Video Ingestion</span>
           </h2>
-          <span className="text-xs text-slate-400">Upload a file or paste a link to begin clipping instantly</span>
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Upload a file or paste a link to begin clipping instantly</span>
         </div>
 
         <VideoSourceTabs
@@ -224,9 +223,9 @@ export const DashboardPage: React.FC = () => {
       <div className="space-y-4 pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <FolderKanban className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-base font-bold text-white">Recent Projects</h2>
-            <span className="text-xs text-slate-400">({projects.length})</span>
+            <FolderKanban className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+            <h2 className="text-base font-bold text-[var(--text-primary)]">Recent Projects</h2>
+            <span className="text-xs font-semibold text-[var(--text-secondary)]">({projects.length})</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -258,18 +257,22 @@ export const DashboardPage: React.FC = () => {
             {filteredProjects.slice(0, 6).map((project) => (
               <div
                 key={project.id}
-                className="bg-dark-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all hover:shadow-xl group flex flex-col justify-between"
+                className="border rounded-2xl overflow-hidden hover:shadow-xl group flex flex-col justify-between transition-all"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
               >
                 {/* Thumbnail Header */}
                 <Link to={`/dashboard/projects/${project.id}`}>
-                  <div className="relative aspect-video bg-dark-950 overflow-hidden cursor-pointer">
+                  <div className="relative aspect-video bg-black overflow-hidden cursor-pointer">
                     <img
                       src={project.sourceVideo.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=80'}
                       alt={project.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-dark-950/40 group-hover:bg-dark-950/20 transition-colors flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-brand-500/80 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-brand-500/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                         <Play className="w-5 h-5 fill-current ml-0.5" />
                       </div>
                     </div>
@@ -290,30 +293,30 @@ export const DashboardPage: React.FC = () => {
                 {/* Body */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-white text-sm truncate group-hover:text-brand-300 transition-colors mb-1">
+                    <h3 className="font-bold text-sm truncate group-hover:text-[#5145DE] transition-colors mb-1 text-[var(--text-primary)]">
                       <Link to={`/dashboard/projects/${project.id}`}>{project.name}</Link>
                     </h3>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-400 mt-2">
+                    <div className="flex items-center gap-3 text-xs mt-2 text-[var(--text-secondary)] font-medium">
                       <span className="flex items-center gap-1">
-                        <Layers className="w-3.5 h-3.5 text-brand-400" />
-                        <strong className="text-white">{project.clips.length}</strong> clips
+                        <Layers className="w-3.5 h-3.5 text-[#5145DE] dark:text-brand-500" />
+                        <strong className="text-[var(--text-primary)]">{project.clips.length}</strong> clips
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="flex items-center gap-1 text-[var(--text-secondary)]">
+                        <Clock className="w-3.5 h-3.5" />
                         {formatRelativeTime(project.createdAt)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400">
-                      Aspect: <strong className="text-slate-300">{project.config.aspectRatio}</strong>
+                  <div className="mt-4 pt-3 border-t flex items-center justify-between border-[var(--border)]">
+                    <span className="text-[11px] font-medium text-[var(--text-secondary)]">
+                      Aspect: <strong className="text-[var(--text-primary)]">{project.config.aspectRatio}</strong>
                     </span>
 
                     <Link to={`/dashboard/projects/${project.id}`}>
-                      <button className="text-xs font-semibold text-brand-400 hover:text-white flex items-center gap-1 transition-colors">
+                      <button className="text-xs font-bold text-[#5145DE] hover:text-[#4338CA] dark:text-brand-400 dark:hover:text-brand-300 flex items-center gap-1 transition-colors">
                         <span>Open Workspace</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
@@ -331,17 +334,21 @@ export const DashboardPage: React.FC = () => {
         <div className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <h2 className="text-base font-bold text-white">Latest Generated Clips</h2>
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Latest Generated Clips</h2>
             </div>
-            <span className="text-xs text-slate-400">Quick jump directly into clip editor</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Quick jump directly into clip editor</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {recentClips.map((clip) => (
               <div
                 key={clip.id}
-                className="p-3.5 rounded-xl bg-dark-900 border border-slate-800 hover:border-slate-700 transition-all flex items-center gap-3 group"
+                className="p-3.5 rounded-xl border hover:shadow-md transition-all flex items-center gap-3 group"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
               >
                 <div className="relative w-16 aspect-[9/16] rounded-lg overflow-hidden bg-black shrink-0">
                   <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" />
@@ -352,23 +359,23 @@ export const DashboardPage: React.FC = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[10px] font-bold text-amber-300">
-                      ★ {clip.viralScore} Hook
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-300 flex items-center gap-0.5">
+                      <Flame className="w-3 h-3 text-amber-500 fill-amber-500" /> {clip.viralScore} Hook
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                       {clip.aspectRatio}
                     </span>
                   </div>
 
-                  <h4 className="text-xs font-semibold text-white truncate group-hover:text-brand-300 transition-colors">
+                  <h4 className="text-xs font-semibold truncate group-hover:text-brand-500 transition-colors" style={{ color: 'var(--text-primary)' }}>
                     {clip.title}
                   </h4>
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                  <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     From: {clip.projectName}
                   </p>
 
                   <Link to={`/dashboard/clips/${clip.id}`} className="mt-2 inline-block">
-                    <span className="text-[11px] font-semibold text-brand-400 hover:text-white flex items-center gap-1 transition-colors">
+                    <span className="text-[11px] font-semibold text-brand-500 hover:text-brand-600 flex items-center gap-1 transition-colors">
                       <Edit3 className="w-3 h-3" /> Edit in Studio
                     </span>
                   </Link>

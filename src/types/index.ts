@@ -17,16 +17,42 @@ export type ClipPreference =
   | 'emotional'
   | 'highlights';
 
-export type CaptionPreset = 'hormozi' | 'minimal' | 'karaoke' | 'neon' | 'cinematic';
-export type CaptionPosition = 'bottom' | 'middle' | 'top';
+export type CaptionPreset = 
+  | 'hormozi' 
+  | 'boxed' 
+  | 'karaoke' 
+  | 'bounce' 
+  | 'minimal' 
+  | 'neon' 
+  | 'cinematic';
+
+export type CaptionPosition = 'bottom' | 'middle' | 'top' | 'custom';
+export type SubtitleDisplayMode = 'word-highlight' | 'boxed-word' | 'single-word' | 'phrase' | 'karaoke';
+export type SubtitleOutlineWidth = 'none' | 'thin' | 'medium' | 'thick';
+export type SubtitleTextCase = 'uppercase' | 'title' | 'original';
 
 export interface CaptionSettings {
   enabled: boolean;
   preset: CaptionPreset;
   fontSize: 'sm' | 'md' | 'lg' | 'xl';
   position: CaptionPosition;
+  yOffset?: number; // 10 to 90% vertical position
+  fontFamily?: string;
   highlightColor: string;
   textColor: string;
+  activeWordBgColor?: string;
+  activeWordTextColor?: string;
+  activeWordScale?: number;
+  textCase?: SubtitleTextCase;
+  outlineColor?: string;
+  outlineWidth?: SubtitleOutlineWidth;
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  displayMode?: SubtitleDisplayMode;
+  shadowType?: 'none' | 'soft' | 'glow' | 'heavy';
+  maxWordsPerSegment?: number;
+  speakerLabels?: boolean;
+  language?: string;
   showOpeningTitle: boolean;
   openingTitle?: string;
 }
@@ -47,6 +73,7 @@ export interface ProjectConfig {
   customClipCount?: number;
   targetDuration: '15-30' | '30-60' | '60-90' | 'custom';
   customDurationSeconds?: number;
+  exactDurationSeconds?: number;
   aspectRatio: AspectRatio;
   contentType: ContentType;
   preferences: ClipPreference[];
@@ -76,11 +103,20 @@ export interface ProcessingJob {
   completedAt?: string;
 }
 
+export interface SubtitleWord {
+  word: string;
+  start: number;
+  end: number;
+  confidence?: number;
+}
+
 export interface SubtitleSegment {
   id: string;
   start: number;
   end: number;
   text: string;
+  speaker?: string;
+  words?: SubtitleWord[];
   highlightWords?: string[];
 }
 
@@ -109,7 +145,11 @@ export interface Clip {
   subtitles: SubtitleSegment[];
   captionSettings: CaptionSettings;
   thumbnailUrl: string;
-  videoUrl: string;
+  videoUrl: string; // The active playback URL (points to subtitled video if rendered)
+  originalVideoUrl?: string; // Preserved original clean clip reference
+  subtitledVideoUrl?: string; // Final subtitled MP4 video URL
+  subtitleProcessingStatus?: 'idle' | 'in_queue' | 'in_progress' | 'completed' | 'failed';
+  subtitleProcessingError?: string;
   selected: boolean;
   createdAt: string;
   updatedAt: string;
@@ -137,6 +177,23 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   status: 'draft' | 'processing' | 'completed' | 'failed';
+
+  // Extended Multi-Platform Ingestion & Video Records (Part 10)
+  source_platform?: string;
+  source_url?: string;
+  source_video_id?: string;
+  source_title?: string;
+  source_thumbnail?: string;
+  source_duration?: number;
+  ingestion_status?: string;
+  accessibility_status?: string;
+  processing_job_id?: string;
+  original_video_reference?: string;
+  generated_clips?: Clip[];
+  subtitle_status?: string;
+  final_processing_status?: string;
+  error_message?: string;
+
   sourceVideo: {
     name: string;
     size: number;
@@ -147,6 +204,8 @@ export interface Project {
     aspectRatio: string;
     url?: string;
     thumbnailUrl?: string;
+    sourcePlatform?: string;
+    sourceVideoId?: string;
   };
   config: ProjectConfig;
   clips: Clip[];
@@ -172,6 +231,17 @@ export interface AIServiceSettings {
   isKeyVerified?: boolean;
 }
 
+export interface DeepgramSettings {
+  apiKey: string;
+  model: 'nova-2' | 'nova-2-general' | 'nova-2-meeting' | 'nova-2-phonecall' | 'nova-3' | 'enhanced' | 'base';
+  language?: string;
+  smartFormat: boolean;
+  punctuate: boolean;
+  diarize: boolean;
+  utterances: boolean;
+  isKeyVerified?: boolean;
+}
+
 export interface UserSettings {
   defaultAspectRatio: AspectRatio;
   defaultDuration: '15-30' | '30-60' | '60-90';
@@ -179,7 +249,9 @@ export interface UserSettings {
   defaultCaptionPreset: CaptionPreset;
   autoHighlightKeywords: boolean;
   emailNotifications: boolean;
-  theme: 'dark';
+  theme: 'light' | 'dark' | 'system';
   aiSettings: AIServiceSettings;
+  deepgramSettings?: DeepgramSettings;
+  subtitleDefaults?: Partial<CaptionSettings>;
 }
 

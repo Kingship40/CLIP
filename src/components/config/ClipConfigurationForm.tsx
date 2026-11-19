@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ProjectConfig,
   AspectRatio,
@@ -6,6 +7,9 @@ import {
   ClipPreference,
   CaptionPreset,
   CaptionPosition,
+  SubtitleDisplayMode,
+  SubtitleTextCase,
+  SubtitleOutlineWidth,
 } from '../../types';
 import { AspectRatioSelector } from './AspectRatioSelector';
 import { Button } from '../common/Button';
@@ -22,7 +26,14 @@ import {
   Film,
   MessageSquare,
   HelpCircle,
+  AudioLines,
+  Palette,
+  ExternalLink,
+  CheckCircle2,
+  MoveVertical,
 } from 'lucide-react';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { deepgramServiceInstance } from '../../services/deepgramService';
 
 export interface ClipConfigurationFormProps {
   initialConfig?: ProjectConfig;
@@ -44,7 +55,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
     highlightColor: '#F59E0B',
     textColor: '#FFFFFF',
     showOpeningTitle: true,
-    openingTitle: 'Key Takeaway 🔥',
+    openingTitle: 'Key Takeaway',
   },
   outputResolution: '1080p',
   language: 'en',
@@ -57,7 +68,24 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
-  const [config, setConfig] = useState<ProjectConfig>(initialConfig);
+  const { settings } = useSettingsStore();
+  const isDeepgramReady =
+    deepgramServiceInstance.isConfigured() ||
+    Boolean(settings.deepgramSettings?.apiKey);
+
+  // Initialize with user defaults if available
+  const [config, setConfig] = useState<ProjectConfig>(() => {
+    if (settings.subtitleDefaults) {
+      return {
+        ...initialConfig,
+        captionSettings: {
+          ...initialConfig.captionSettings,
+          ...settings.subtitleDefaults,
+        },
+      };
+    }
+    return initialConfig;
+  });
   const [activeTab, setActiveTab] = useState<'clips' | 'captions' | 'advanced'>('clips');
 
   const contentTypes: { id: ContentType; label: string }[] = [
@@ -80,8 +108,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
   ];
 
   const captionPresets: { id: CaptionPreset; label: string; preview: string; color: string }[] = [
-    { id: 'hormozi', label: 'Hormozi Bold', preview: 'BOLD YELLOW WORDS', color: 'bg-amber-400 text-black font-black' },
+    { id: 'hormozi', label: 'Hormozi Viral', preview: 'BOLD YELLOW WORDS', color: 'bg-amber-400 text-black font-black' },
+    { id: 'boxed', label: 'Boxed Pill', preview: 'ACTIVE WORD PILL', color: 'bg-amber-400 text-black font-black px-2 rounded' },
     { id: 'karaoke', label: 'Electric Karaoke', preview: 'CYAN WORD GLOW', color: 'bg-cyan-500 text-white font-bold' },
+    { id: 'bounce', label: 'Bounce & Pop', preview: 'KINETIC ZOOM POP', color: 'bg-emerald-500 text-white font-black' },
     { id: 'minimal', label: 'Clean Subtitle', preview: 'Minimal & Elegant', color: 'bg-slate-900 text-white font-medium' },
     { id: 'neon', label: 'Neon Glow', preview: 'VIOLET PULSE', color: 'bg-purple-600 text-white font-extrabold shadow-glow-brand' },
     { id: 'cinematic', label: 'Cinematic Box', preview: 'Subtitled Box', color: 'bg-black/90 text-slate-100 font-mono' },
@@ -103,17 +133,17 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Category Tabs */}
-      <div className="flex border-b border-slate-800 gap-6 text-sm">
+      <div className="flex border-b border-[var(--border)] dark:border-slate-800 gap-6 text-sm">
         <button
           type="button"
           onClick={() => setActiveTab('clips')}
           className={`pb-3 font-semibold transition-colors flex items-center gap-2 border-b-2 -mb-px ${
             activeTab === 'clips'
-              ? 'border-brand-500 text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-brand-500 text-brand-700 dark:text-white font-bold'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
-          <Layers className="w-4 h-4 text-brand-400" />
+          <Layers className="w-4 h-4 text-brand-600 dark:text-brand-400" />
           <span>Clip Settings & Aspect</span>
         </button>
 
@@ -122,11 +152,11 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           onClick={() => setActiveTab('captions')}
           className={`pb-3 font-semibold transition-colors flex items-center gap-2 border-b-2 -mb-px ${
             activeTab === 'captions'
-              ? 'border-brand-500 text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-brand-500 text-brand-700 dark:text-white font-bold'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
-          <Type className="w-4 h-4 text-cyan-400" />
+          <Type className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
           <span>Captions & Typography</span>
         </button>
 
@@ -135,11 +165,11 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           onClick={() => setActiveTab('advanced')}
           className={`pb-3 font-semibold transition-colors flex items-center gap-2 border-b-2 -mb-px ${
             activeTab === 'advanced'
-              ? 'border-brand-500 text-white'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-brand-500 text-brand-700 dark:text-white font-bold'
+              : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] dark:text-slate-400 dark:hover:text-slate-200'
           }`}
         >
-          <SlidersHorizontal className="w-4 h-4 text-purple-400" />
+          <SlidersHorizontal className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           <span>Resolution & AI Prompts</span>
         </button>
       </div>
@@ -150,10 +180,12 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           {/* Aspect Ratio */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300">
                 Target Aspect Ratio
               </label>
-              <span className="text-[11px] text-slate-400">Optimized for vertical feeds</span>
+              <span className="text-[11px] text-[var(--text-secondary)] dark:text-slate-400 font-medium">
+                Optimized for vertical feeds
+              </span>
             </div>
             <AspectRatioSelector
               value={config.aspectRatio}
@@ -165,7 +197,7 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Number of Clips */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
                 Number of Clips
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -174,10 +206,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                     key={num}
                     type="button"
                     onClick={() => setConfig({ ...config, clipCount: num })}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                    className={`py-2 px-3 rounded-xl border text-xs transition-all ${
                       config.clipCount === num
-                        ? 'bg-brand-500/20 border-brand-500 text-white ring-1 ring-brand-500'
-                        : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850 hover:text-white'
+                        ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold shadow-sm ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:border-brand-500 dark:text-white dark:ring-1 dark:ring-brand-500'
+                        : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] font-semibold hover:border-brand-300 hover:bg-[#F1EFFF]/50 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850 dark:hover:text-white'
                     }`}
                   >
                     {num} Clips
@@ -192,10 +224,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                       customClipCount: config.customClipCount || 4,
                     })
                   }
-                  className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                  className={`py-2 px-3 rounded-xl border text-xs transition-all ${
                     config.clipCount === 'custom'
-                      ? 'bg-brand-500/20 border-brand-500 text-white ring-1 ring-brand-500'
-                      : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850 hover:text-white'
+                      ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold shadow-sm ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:border-brand-500 dark:text-white dark:ring-1 dark:ring-brand-500'
+                      : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] font-semibold hover:border-brand-300 hover:bg-[#F1EFFF]/50 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850 dark:hover:text-white'
                   }`}
                 >
                   Custom
@@ -220,7 +252,7 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
 
             {/* Target Duration */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
                 Clip Duration Target
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -241,10 +273,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                           dur.id === 'custom' ? config.customDurationSeconds || 45 : undefined,
                       })
                     }
-                    className={`py-2 px-2 text-center rounded-lg border text-xs font-semibold transition-all ${
+                    className={`py-2 px-2 text-center rounded-xl border text-xs transition-all ${
                       config.targetDuration === dur.id
-                        ? 'bg-brand-500/20 border-brand-500 text-white ring-1 ring-brand-500'
-                        : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850 hover:text-white'
+                        ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold shadow-sm ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:border-brand-500 dark:text-white dark:ring-1 dark:ring-brand-500'
+                        : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] font-semibold hover:border-brand-300 hover:bg-[#F1EFFF]/50 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850 dark:hover:text-white'
                     }`}
                   >
                     {dur.label}
@@ -274,7 +306,7 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
 
           {/* Content Type */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
               Content Type
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -283,10 +315,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                   key={type.id}
                   type="button"
                   onClick={() => setConfig({ ...config, contentType: type.id })}
-                  className={`py-2 px-3 text-left rounded-lg border text-xs font-medium transition-all ${
+                  className={`py-2.5 px-3 text-left rounded-xl border text-xs transition-all ${
                     config.contentType === type.id
-                      ? 'bg-brand-500/15 border-brand-500/60 text-white font-semibold'
-                      : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850 hover:text-white'
+                      ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold shadow-sm ring-1 ring-brand-500/20 dark:bg-brand-500/20 dark:border-brand-500 dark:text-white dark:ring-1 dark:ring-brand-500'
+                      : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] font-medium hover:border-brand-300 hover:bg-[#F1EFFF]/50 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850 dark:hover:text-white'
                   }`}
                 >
                   {type.label}
@@ -297,7 +329,7 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
 
           {/* Clip Selection Preferences */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
               Clip Highlight Priorities
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -307,18 +339,37 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                   <div
                     key={pref.id}
                     onClick={() => togglePreference(pref.id)}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
                       checked
-                        ? 'bg-brand-500/10 border-brand-500/50 text-white'
-                        : 'bg-dark-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-[#EAE8FF] border-2 border-brand-500 ring-1 ring-brand-500/20 shadow-sm dark:bg-brand-500/15 dark:border-brand-500 dark:ring-brand-500/30'
+                        : 'bg-[var(--bg-surface)] border-[var(--border)] hover:border-brand-300 hover:bg-[#F1EFFF]/40 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-dark-850'
                     }`}
                   >
-                    <Checkbox
-                      checked={checked}
-                      onChange={() => togglePreference(pref.id)}
-                      label={<span className="font-semibold text-xs text-white">{pref.label}</span>}
-                      description={pref.desc}
-                    />
+                    <div className="flex items-start gap-3">
+                      <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                        <div
+                          className={`w-4 h-4 rounded border transition-colors flex items-center justify-center ${
+                            checked
+                              ? 'bg-brand-600 border-brand-600 text-white'
+                              : 'bg-[var(--bg-surface)] border-[var(--border)] dark:bg-dark-950 dark:border-slate-700'
+                          }`}
+                        >
+                          {checked && (
+                            <svg className="w-3 h-3 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-bold text-xs text-[var(--text-primary)] dark:text-white block">
+                          {pref.label}
+                        </span>
+                        <p className="text-xs text-[var(--text-secondary)] dark:text-slate-400 mt-0.5 leading-relaxed font-normal">
+                          {pref.desc}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -330,10 +381,36 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
       {/* Tab 2: Captions & Typography */}
       {activeTab === 'captions' && (
         <div className="space-y-6 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-dark-900 border border-slate-800">
+          {/* Deepgram ASR Integration Notice */}
+          <div
+            className={`p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+              isDeepgramReady
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                : 'bg-[var(--bg-surface-2)] border-[var(--border)] text-[var(--text-secondary)]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <AudioLines className={`w-4 h-4 shrink-0 ${isDeepgramReady ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-500'}`} />
+              <span className="font-semibold">
+                {isDeepgramReady
+                  ? '⚡ Subtitles generated with Deepgram Nova-2 ASR (Sub-second word timestamps & speaker diarization)'
+                  : 'Standard ASR active. You can add your Deepgram API Key in Admin for Nova-2 word accuracy.'}
+              </span>
+            </div>
+
+            <Link
+              to="/settings"
+              className="text-[11px] font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline shrink-0"
+            >
+              {isDeepgramReady ? 'Configure Deepgram' : '+ Add Deepgram API Key'}
+            </Link>
+          </div>
+
+          {/* Toggle Captions Card */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 shadow-sm">
             <div>
-              <h4 className="text-sm font-semibold text-white">Auto Kinetic Captions</h4>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h4 className="text-sm font-bold text-[var(--text-primary)] dark:text-white">Auto Kinetic Captions</h4>
+              <p className="text-xs text-[var(--text-secondary)] dark:text-slate-400 mt-0.5">
                 Automatically generate dynamic animated subtitles with highlighted keywords
               </p>
             </div>
@@ -350,12 +427,66 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
 
           {config.captionSettings.enabled && (
             <>
+              {/* Live Interactive Subtitle Preview */}
+              <div className="p-4 rounded-2xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 space-y-2.5 shadow-sm">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold uppercase tracking-wider text-[var(--text-secondary)] flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Real-Time Subtitle Preview</span>
+                  </span>
+                  <span className="text-[11px] font-mono font-bold text-brand-600 dark:text-brand-400">
+                    {config.captionSettings.preset.toUpperCase()} • {config.captionSettings.fontFamily || 'Montserrat'}
+                  </span>
+                </div>
+
+                <div className="relative h-28 rounded-xl bg-gradient-to-b from-slate-900 to-black border border-slate-800 flex items-center justify-center p-4 overflow-hidden select-none">
+                  <div
+                    className="text-center font-black tracking-wider leading-snug px-3 py-1.5 transition-all"
+                    style={{
+                      fontFamily: `"${config.captionSettings.fontFamily || 'Montserrat'}", sans-serif`,
+                      fontSize:
+                        config.captionSettings.fontSize === 'xl'
+                          ? '22px'
+                          : config.captionSettings.fontSize === 'lg'
+                          ? '19px'
+                          : config.captionSettings.fontSize === 'sm'
+                          ? '13px'
+                          : '16px',
+                      color: config.captionSettings.textColor || '#FFFFFF',
+                      textShadow:
+                        config.captionSettings.outlineWidth === 'none'
+                          ? undefined
+                          : `-2px -2px 0 ${config.captionSettings.outlineColor || '#000'}, 2px -2px 0 ${config.captionSettings.outlineColor || '#000'}, -2px 2px 0 ${config.captionSettings.outlineColor || '#000'}, 2px 2px 0 ${config.captionSettings.outlineColor || '#000'}`,
+                    }}
+                  >
+                    <span className="mr-2">THE</span>
+                    <span
+                      className="px-2 py-0.5 rounded-lg inline-block transform scale-110 shadow-lg mx-1"
+                      style={{
+                        backgroundColor:
+                          config.captionSettings.preset === 'boxed'
+                            ? config.captionSettings.activeWordBgColor || '#F59E0B'
+                            : 'transparent',
+                        color:
+                          config.captionSettings.preset === 'boxed'
+                            ? '#000000'
+                            : config.captionSettings.highlightColor || '#F59E0B',
+                      }}
+                    >
+                      BIGGEST
+                    </span>
+                    <span className="mx-2">SECRET</span>
+                    <span>IN 2026</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Presets */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
                   Caption Style Presets
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {captionPresets.map((preset) => {
                     const isSelected = config.captionSettings.preset === preset.id;
                     return (
@@ -365,31 +496,210 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                         onClick={() =>
                           setConfig({
                             ...config,
-                            captionSettings: { ...config.captionSettings, preset: preset.id },
+                            captionSettings: {
+                              ...config.captionSettings,
+                              preset: preset.id,
+                              activeWordBgColor: preset.id === 'boxed' ? config.captionSettings.highlightColor || '#F59E0B' : undefined,
+                            },
                           })
                         }
                         className={`p-3 rounded-xl border text-left transition-all ${
                           isSelected
-                            ? 'bg-brand-500/15 border-brand-500 ring-1 ring-brand-500'
-                            : 'bg-dark-900 border-slate-800 hover:border-slate-700'
+                            ? 'bg-[#EAE8FF] border-2 border-brand-500 ring-1 ring-brand-500/20 shadow-sm dark:bg-brand-500/15 dark:border-brand-500'
+                            : 'bg-[var(--bg-surface)] border-[var(--border)] hover:border-brand-300 hover:bg-[#F1EFFF]/40 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:hover:border-slate-700'
                         }`}
                       >
-                        <div className="h-10 rounded-lg bg-dark-950 flex items-center justify-center p-2 mb-2 border border-slate-800">
-                          <span className={`px-2 py-0.5 rounded text-[11px] ${preset.color}`}>
+                        <div className="h-9 rounded-lg bg-[var(--bg-surface-2)] dark:bg-dark-950 flex items-center justify-center p-1.5 mb-2 border border-[var(--border)] dark:border-slate-800">
+                          <span className={`px-2 py-0.5 rounded text-[10px] ${preset.color}`}>
                             {preset.preview}
                           </span>
                         </div>
-                        <span className="text-xs font-semibold text-white block">{preset.label}</span>
+                        <span className="text-xs font-bold text-[var(--text-primary)] dark:text-white block truncate">
+                          {preset.label}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Position and Size */}
+              {/* Typography Controls: Font Family, Size, Text Case */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-1.5">
+                    Font Family
+                  </label>
+                  <select
+                    value={config.captionSettings.fontFamily || 'Montserrat'}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        captionSettings: { ...config.captionSettings, fontFamily: e.target.value },
+                      })
+                    }
+                    className="w-full bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-[var(--text-primary)] dark:text-white focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="Montserrat">Montserrat (Viral Modern)</option>
+                    <option value="Inter">Inter (Clean Minimal)</option>
+                    <option value="Impact">Impact (Heavy Punch)</option>
+                    <option value="Arial Black">Arial Black (Classic Bold)</option>
+                    <option value="Bebas Neue">Bebas Neue (Condensed Poster)</option>
+                    <option value="Outfit">Outfit (SaaS Modern)</option>
+                    <option value="Poppins">Poppins (Rounded Clean)</option>
+                    <option value="Roboto">Roboto (Crisp Editorial)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-1.5">
+                    Font Size
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() =>
+                          setConfig({
+                            ...config,
+                            captionSettings: { ...config.captionSettings, fontSize: sz },
+                          })
+                        }
+                        className={`py-2 px-1 text-center rounded-xl border text-xs font-semibold uppercase transition-all ${
+                          config.captionSettings.fontSize === sz
+                            ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold dark:bg-brand-500/20 dark:border-brand-500 dark:text-white'
+                            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] hover:border-brand-300 hover:bg-[#F1EFFF]/50 dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-1.5">
+                    Text Case
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(['uppercase', 'title', 'original'] as const).map((tc) => (
+                      <button
+                        key={tc}
+                        type="button"
+                        onClick={() =>
+                          setConfig({
+                            ...config,
+                            captionSettings: { ...config.captionSettings, textCase: tc },
+                          })
+                        }
+                        className={`py-2 px-1 text-center rounded-xl border text-xs font-semibold capitalize transition-all ${
+                          (config.captionSettings.textCase || 'uppercase') === tc
+                            ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold dark:bg-brand-500/20 dark:border-brand-500 dark:text-white'
+                            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] hover:border-brand-300 hover:bg-[#F1EFFF]/50 dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850'
+                        }`}
+                      >
+                        {tc === 'uppercase' ? 'CAPS' : tc}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Color Customization: Highlight & Primary Text */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
+                    Highlight Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {['#F59E0B', '#06B6D4', '#A855F7', '#10B981', '#EC4899', '#3B82F6', '#FFFFFF'].map(
+                      (color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() =>
+                            setConfig({
+                              ...config,
+                              captionSettings: {
+                                ...config.captionSettings,
+                                highlightColor: color,
+                                activeWordBgColor: color,
+                              },
+                            })
+                          }
+                          className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                            config.captionSettings.highlightColor === color
+                              ? 'border-brand-600 scale-110 ring-2 ring-brand-500/40'
+                              : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: color }}
+                          aria-label={`Select highlight color ${color}`}
+                        />
+                      )
+                    )}
+                    <input
+                      type="color"
+                      value={config.captionSettings.highlightColor || '#F59E0B'}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          captionSettings: {
+                            ...config.captionSettings,
+                            highlightColor: e.target.value,
+                            activeWordBgColor: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-7 h-7 rounded-lg border border-[var(--border)] cursor-pointer bg-transparent"
+                      title="Custom Hex Color"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
+                    Primary Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {['#FFFFFF', '#FEF08A', '#E2E8F0', '#F3E8FF', '#E0F2FE'].map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() =>
+                          setConfig({
+                            ...config,
+                            captionSettings: { ...config.captionSettings, textColor: color },
+                          })
+                        }
+                        className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                          config.captionSettings.textColor === color
+                            ? 'border-brand-600 scale-110 ring-2 ring-brand-500/40'
+                            : 'border-transparent'
+                        }`}
+                        style={{ backgroundColor: color }}
+                        aria-label={`Select text color ${color}`}
+                      />
+                    ))}
+                    <input
+                      type="color"
+                      value={config.captionSettings.textColor || '#FFFFFF'}
+                      onChange={(e) =>
+                        setConfig({
+                          ...config,
+                          captionSettings: { ...config.captionSettings, textColor: e.target.value },
+                        })
+                      }
+                      className="w-7 h-7 rounded-lg border border-[var(--border)] cursor-pointer bg-transparent"
+                      title="Custom Text Hex Color"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Position and Display Mode */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
                     Caption Position
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -403,10 +713,10 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                             captionSettings: { ...config.captionSettings, position: pos },
                           })
                         }
-                        className={`py-2 px-3 rounded-lg border text-xs font-semibold capitalize transition-all ${
+                        className={`py-2 px-3 rounded-xl border text-xs font-semibold capitalize transition-all ${
                           config.captionSettings.position === pos
-                            ? 'bg-brand-500/20 border-brand-500 text-white'
-                            : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850'
+                            ? 'bg-[#EAE8FF] border-2 border-brand-500 text-brand-700 font-bold dark:bg-brand-500/20 dark:border-brand-500 dark:text-white'
+                            : 'bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)] hover:border-brand-300 hover:bg-[#F1EFFF]/50 dark:bg-dark-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-dark-850'
                         }`}
                       >
                         {pos}
@@ -416,70 +726,11 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-                    Font Size
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
-                      <button
-                        key={sz}
-                        type="button"
-                        onClick={() =>
-                          setConfig({
-                            ...config,
-                            captionSettings: { ...config.captionSettings, fontSize: sz },
-                          })
-                        }
-                        className={`py-2 px-2 text-center rounded-lg border text-xs font-semibold uppercase transition-all ${
-                          config.captionSettings.fontSize === sz
-                            ? 'bg-brand-500/20 border-brand-500 text-white'
-                            : 'bg-dark-900 border-slate-800 text-slate-400 hover:bg-dark-850'
-                        }`}
-                      >
-                        {sz}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Keyword Highlight Color */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
-                    Highlight Color
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {['#F59E0B', '#06B6D4', '#A855F7', '#10B981', '#EC4899', '#3B82F6'].map(
-                      (color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          onClick={() =>
-                            setConfig({
-                              ...config,
-                              captionSettings: { ...config.captionSettings, highlightColor: color },
-                            })
-                          }
-                          className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
-                            config.captionSettings.highlightColor === color
-                              ? 'border-white scale-110 ring-2 ring-white/30'
-                              : 'border-transparent'
-                          }`}
-                          style={{ backgroundColor: color }}
-                          aria-label={`Select highlight color ${color}`}
-                        />
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-2">
                     Opening Hook Title
                   </label>
                   <Input
-                    placeholder="e.g. Stop Scrolling! 🚀"
+                    placeholder="e.g. Stop Scrolling!"
                     value={config.captionSettings.openingTitle || ''}
                     onChange={(e) =>
                       setConfig({
@@ -531,44 +782,49 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] dark:text-slate-300 mb-1.5">
               Custom AI Instructions (Optional)
             </label>
             <textarea
               rows={3}
-              className="w-full bg-dark-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+              className="w-full bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] dark:text-slate-100 placeholder:text-[var(--text-muted)] focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-sm"
               placeholder="e.g. Focus on pricing tips mentioned in the first 10 minutes, exclude any sponsor segments..."
               value={config.customInstructions || ''}
               onChange={(e) => setConfig({ ...config, customInstructions: e.target.value })}
             />
           </div>
 
-          <div className="p-3.5 rounded-xl bg-dark-900 border border-slate-800">
+          <div className="p-3.5 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800">
             <Checkbox
               checked={config.keepAudio}
               onChange={(e) => setConfig({ ...config, keepAudio: e.target.checked })}
-              label={<span className="text-xs font-semibold text-white">Preserve Original Audio Quality</span>}
+              label={<span className="text-xs font-bold text-[var(--text-primary)] dark:text-white">Preserve Original Audio Quality</span>}
               description="Keep high-fidelity uncompressed AAC audio track during clipping"
             />
           </div>
         </div>
       )}
 
-      {/* Configuration Summary & Action */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-950/60 to-dark-900 border border-brand-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-xs space-y-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-brand-400" />
-            <span className="font-semibold text-white">
+      {/* Configuration Summary & Action Panel */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[var(--bg-surface)] dark:bg-dark-900/90 border border-[var(--border)] dark:border-brand-500/20 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all">
+        <div className="text-xs space-y-1.5 min-w-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#EAE8FF] dark:bg-brand-500/20 border border-brand-200 dark:border-brand-500/30 flex items-center justify-center shrink-0 shadow-sm">
+              <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+            </div>
+            <span className="font-bold text-sm text-[var(--text-primary)] dark:text-white">
               Ready to generate{' '}
-              <span className="text-brand-300">
+              <span className="text-brand-600 dark:text-brand-400 font-extrabold">
                 {config.clipCount === 'custom' ? config.customClipCount : config.clipCount} vertical clips
               </span>
             </span>
           </div>
-          <p className="text-slate-400 text-[11px]">
-            Aspect: {config.aspectRatio} • Duration: {config.targetDuration}s • Captions:{' '}
-            {config.captionSettings.enabled ? config.captionSettings.preset : 'Off'}
+          <p className="text-[var(--text-secondary)] dark:text-slate-400 text-xs font-medium pl-10">
+            Aspect: <strong className="text-[var(--text-primary)] dark:text-slate-200">{config.aspectRatio}</strong> • Duration:{' '}
+            <strong className="text-[var(--text-primary)] dark:text-slate-200">{config.targetDuration}s</strong> • Captions:{' '}
+            <strong className="text-[var(--text-primary)] dark:text-slate-200">
+              {config.captionSettings.enabled ? config.captionSettings.preset : 'Off'}
+            </strong>
           </p>
         </div>
 
@@ -578,7 +834,7 @@ export const ClipConfigurationForm: React.FC<ClipConfigurationFormProps> = ({
           size="lg"
           isLoading={isLoading}
           leftIcon={<Wand2 className="w-5 h-5 text-white" />}
-          className="w-full sm:w-auto shadow-glow-brand"
+          className="w-full sm:w-auto px-6 py-3 font-bold shadow-md shadow-brand-500/25 hover:shadow-brand-500/40 text-sm shrink-0"
         >
           Generate AI Clips
         </Button>

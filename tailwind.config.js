@@ -8,6 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        // CSS var semantic tokens (theme-aware)
+        page: 'var(--bg-page)',
+        sidebar: 'var(--bg-sidebar)',
+        surface: 'var(--bg-surface)',
+        'surface-2': 'var(--bg-surface-2)',
+        elevated: 'var(--bg-elevated)',
+        'theme-border': 'var(--border)',
+        'border-subtle': 'var(--border-subtle)',
+        'control-selected': 'var(--bg-selected)',
         dark: {
           950: '#070a13',
           900: '#0b1120',
@@ -42,6 +51,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"Plus Jakarta Sans"',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',

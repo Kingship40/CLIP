@@ -1,4 +1,5 @@
 import { Project, UserSettings, User, Clip } from '../types';
+import { ensureWordTimings } from '../services/transcriptionService';
 
 const STORAGE_KEYS = {
   PROJECTS: 'clipforge_projects',
@@ -33,6 +34,33 @@ export const DEFAULT_SETTINGS: UserSettings = {
     geminiModel: 'gemini-1.5-flash',
     openaiModel: 'gpt-4o-mini',
     isKeyVerified: false,
+  },
+  deepgramSettings: {
+    apiKey: '',
+    model: 'nova-2',
+    language: 'auto',
+    smartFormat: true,
+    punctuate: true,
+    diarize: true,
+    utterances: true,
+    isKeyVerified: false,
+  },
+  subtitleDefaults: {
+    enabled: true,
+    preset: 'hormozi',
+    fontSize: 'md',
+    position: 'bottom',
+    fontFamily: 'Montserrat',
+    highlightColor: '#F59E0B',
+    textColor: '#FFFFFF',
+    activeWordBgColor: '#F59E0B',
+    activeWordTextColor: '#000000',
+    textCase: 'uppercase',
+    outlineWidth: 'medium',
+    outlineColor: '#000000',
+    displayMode: 'word-highlight',
+    showOpeningTitle: true,
+    openingTitle: 'Key Takeaway',
   },
 };
 
@@ -274,8 +302,8 @@ export const SEED_PROJECTS: Project[] = [
           openingTitle: 'Stop Underpricing! 🛑',
         },
         subtitles: [
-          { id: 'sub_b1', start: 20.0, end: 24.0, text: 'If you charge $10 a month, you need 10,000 customers to make $100k ARR.', highlightWords: ['charge $10', '10,000 customers'] },
-          { id: 'sub_b2', start: 24.5, end: 28.0, text: 'If you charge $1,000 a year, you only need 100 happy customers.', highlightWords: ['100 happy customers'] },
+          { id: 'sub_b1', start: 0.5, end: 4.5, text: 'If you charge $10 a month, you need 10,000 customers to make $100k ARR.', highlightWords: ['charge $10', '10,000 customers'] },
+          { id: 'sub_b2', start: 5.0, end: 8.5, text: 'If you charge $1,000 a year, you only need 100 happy customers.', highlightWords: ['100 happy customers'] },
         ],
         thumbnailUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600&auto=format&fit=crop&q=80',
         videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
@@ -284,27 +312,141 @@ export const SEED_PROJECTS: Project[] = [
         updatedAt: new Date(Date.now() - 3600000 * 70).toISOString(),
         isRendered: false,
       },
+      {
+        id: 'clip_b2',
+        projectId: 'proj_demo_founder_talk',
+        title: 'The Rule of 40 in High-Growth SaaS',
+        description: 'How to balance growth rate and profit margin to achieve top quartile venture valuation.',
+        startTime: 60,
+        endTime: 88,
+        duration: 28,
+        aspectRatio: '9:16',
+        viralScore: 91,
+        hookSummary: 'Actionable breakdown of the single financial metric top investors look for.',
+        hashtags: ['#SaaSMetrics', '#RuleOf40', '#VentureCapital'],
+        captionSettings: {
+          enabled: true,
+          preset: 'minimal',
+          fontSize: 'md',
+          position: 'bottom',
+          highlightColor: '#6366F1',
+          textColor: '#FFFFFF',
+          showOpeningTitle: true,
+          openingTitle: 'The Rule of 40 📈',
+        },
+        subtitles: [
+          { id: 'sub_b2_1', start: 0.5, end: 4.2, text: 'Your growth rate plus your free cash flow margin must exceed 40 percent.', highlightWords: ['growth rate', 'exceed 40 percent'] },
+          { id: 'sub_b2_2', start: 4.6, end: 8.8, text: 'If you grow at 60% with negative 20% margin, you are still elite.', highlightWords: ['grow at 60%', 'still elite'] },
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        selected: true,
+        createdAt: new Date(Date.now() - 3600000 * 68).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 68).toISOString(),
+        isRendered: false,
+      },
+      {
+        id: 'clip_b3',
+        projectId: 'proj_demo_founder_talk',
+        title: 'Why Product-Led Growth Beats Sales Early On',
+        description: 'How self-serve onboarding creates compounding viral loops that eliminate expensive ad spend.',
+        startTime: 105,
+        endTime: 132,
+        duration: 27,
+        aspectRatio: '9:16',
+        viralScore: 89,
+        hookSummary: 'Reveals why self-serve customer journeys beat outbound sales for early validation.',
+        hashtags: ['#ProductLedGrowth', '#StartupGrowth', '#ViralLoops'],
+        captionSettings: {
+          enabled: true,
+          preset: 'minimal',
+          fontSize: 'md',
+          position: 'bottom',
+          highlightColor: '#6366F1',
+          textColor: '#FFFFFF',
+          showOpeningTitle: true,
+          openingTitle: 'Product-Led Growth 🚀',
+        },
+        subtitles: [
+          { id: 'sub_b3_1', start: 0.6, end: 4.5, text: 'Sales-led companies spend months pitching before knowing if the product works.', highlightWords: ['Sales-led', 'months pitching'] },
+          { id: 'sub_b3_2', start: 5.0, end: 9.2, text: 'Product-led companies get feedback within 60 seconds of signup.', highlightWords: ['feedback within 60 seconds'] },
+        ],
+        thumbnailUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=600&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        selected: true,
+        createdAt: new Date(Date.now() - 3600000 * 65).toISOString(),
+        updatedAt: new Date(Date.now() - 3600000 * 65).toISOString(),
+        isRendered: false,
+      },
     ],
   },
 ];
 
 export function getStoredProjects(): Project[] {
+  const migrateAndNormalizeProjects = (projects: Project[]): Project[] => {
+    return projects.map((p) => {
+      const normalizedClips: Clip[] = (p.clips || []).map((c) => ({
+        ...c,
+        projectId: c.projectId || p.id, // Strictly ensure link to project
+        captionSettings: {
+          ...c.captionSettings,
+          enabled: c.captionSettings ? c.captionSettings.enabled !== false : true,
+          preset: c.captionSettings?.preset || 'hormozi',
+          displayMode: c.captionSettings?.displayMode || 'word-highlight',
+          highlightColor: c.captionSettings?.highlightColor || '#FACC15',
+          textColor: c.captionSettings?.textColor || '#FFFFFF',
+        },
+        subtitles: (c.subtitles || []).map(ensureWordTimings),
+      }));
+
+      // Non-destructive schema migration for Part 10 metadata
+      const sourcePlatform = p.source_platform || (p.sourceVideo?.url?.includes('youtube') ? 'youtube' : 'upload');
+      const sourceTitle = p.source_title || p.sourceVideo?.name || p.name;
+      const sourceDuration = p.source_duration !== undefined ? p.source_duration : (p.sourceVideo?.duration || 0);
+
+      return {
+        ...p,
+        source_platform: sourcePlatform,
+        source_url: p.source_url || p.sourceVideo?.url || '',
+        source_video_id: p.source_video_id || (p.sourceVideo as any)?.sourceVideoId || p.id,
+        source_title: sourceTitle,
+        source_thumbnail: p.source_thumbnail || p.sourceVideo?.thumbnailUrl || '',
+        source_duration: sourceDuration,
+        ingestion_status: p.ingestion_status || (p.status === 'completed' ? 'completed' : 'ready'),
+        accessibility_status: p.accessibility_status || (p.sourceVideo?.url ? 'verified' : 'uploaded'),
+        processing_job_id: p.processing_job_id || p.job?.id || `job_${p.id}`,
+        original_video_reference: p.original_video_reference || p.sourceVideo?.url || p.sourceVideo?.name || '',
+        generated_clips: normalizedClips,
+        subtitle_status: p.subtitle_status || (normalizedClips.length > 0 ? 'completed' : 'ready'),
+        final_processing_status: p.final_processing_status || p.status,
+        error_message: p.error_message || p.job?.errorMessage,
+        clips: normalizedClips,
+      };
+    });
+  };
+
   try {
+    if (typeof localStorage === 'undefined') {
+      return migrateAndNormalizeProjects(SEED_PROJECTS);
+    }
     const raw = localStorage.getItem(STORAGE_KEYS.PROJECTS);
     if (!raw) {
-      // Seed default projects
-      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(SEED_PROJECTS));
-      return SEED_PROJECTS;
+      // Seed default projects with migrated schema
+      const normalized = migrateAndNormalizeProjects(SEED_PROJECTS);
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(normalized));
+      return normalized;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    const migrated = migrateAndNormalizeProjects(parsed);
+    return migrated;
   } catch (e) {
-    console.error('Failed to load projects from localStorage:', e);
-    return SEED_PROJECTS;
+    return migrateAndNormalizeProjects(SEED_PROJECTS);
   }
 }
 
 export function saveStoredProjects(projects: Project[]): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
   } catch (e) {
     console.error('Failed to save projects to localStorage:', e);
@@ -313,6 +455,7 @@ export function saveStoredProjects(projects: Project[]): void {
 
 export function getStoredSettings(): UserSettings {
   try {
+    if (typeof localStorage === 'undefined') return DEFAULT_SETTINGS;
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
@@ -331,6 +474,7 @@ export function getStoredSettings(): UserSettings {
 
 export function saveStoredSettings(settings: UserSettings): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
   } catch (e) {
     console.error('Failed to save settings to localStorage:', e);
@@ -339,6 +483,7 @@ export function saveStoredSettings(settings: UserSettings): void {
 
 export function getStoredUser(): User {
   try {
+    if (typeof localStorage === 'undefined') return DEFAULT_USER;
     const raw = localStorage.getItem(STORAGE_KEYS.USER);
     if (!raw) return DEFAULT_USER;
     return { ...DEFAULT_USER, ...JSON.parse(raw) };
@@ -349,6 +494,7 @@ export function getStoredUser(): User {
 
 export function saveStoredUser(user: User): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   } catch (e) {
     console.error('Failed to save user to localStorage:', e);
@@ -357,6 +503,7 @@ export function saveStoredUser(user: User): void {
 
 export function resetAllStorageData(): void {
   try {
+    if (typeof localStorage === 'undefined') return;
     localStorage.removeItem(STORAGE_KEYS.PROJECTS);
     localStorage.removeItem(STORAGE_KEYS.SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.USER);

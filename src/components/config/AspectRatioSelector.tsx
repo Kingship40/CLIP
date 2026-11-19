@@ -56,10 +56,10 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ value,
             type="button"
             onClick={() => onChange(opt.id)}
             className={cn(
-              'flex flex-col items-center text-center p-3.5 rounded-xl border transition-all text-xs focus:outline-none select-none relative',
+              'flex flex-col items-center text-center p-3.5 rounded-xl border transition-all text-xs focus:outline-none select-none relative cursor-pointer',
               isSelected
-                ? 'bg-brand-500/15 border-brand-500 shadow-sm ring-1 ring-brand-500'
-                : 'bg-dark-900 border-slate-800 hover:border-slate-700 hover:bg-dark-850'
+                ? 'bg-[#EAE8FF] border-2 border-brand-500 ring-1 ring-brand-500/20 shadow-sm dark:bg-brand-500/20 dark:border-brand-500 dark:ring-brand-500'
+                : 'bg-[var(--bg-surface)] border-[var(--border)] hover:border-brand-300 hover:bg-[#F1EFFF]/50 shadow-sm dark:bg-dark-900 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-dark-850'
             )}
           >
             {/* Visual Frame Mockup */}
@@ -69,11 +69,18 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ value,
                   'rounded-md border-2 flex items-center justify-center transition-colors',
                   opt.frameClass,
                   isSelected
-                    ? 'border-brand-400 bg-brand-500/30'
-                    : 'border-slate-600 bg-dark-950/50'
+                    ? 'border-brand-500 bg-brand-100/60 dark:border-brand-400 dark:bg-brand-500/30'
+                    : 'border-slate-300 bg-[var(--bg-surface-2)] dark:border-slate-700 dark:bg-dark-950/50'
                 )}
               >
-                <span className={cn('text-[10px]', isSelected ? 'text-brand-300' : 'text-slate-500')}>
+                <span
+                  className={cn(
+                    'text-[10px]',
+                    isSelected
+                      ? 'text-brand-700 dark:text-brand-300'
+                      : 'text-[var(--text-muted)] dark:text-slate-400'
+                  )}
+                >
                   {opt.icon}
                 </span>
               </div>
@@ -81,13 +88,24 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ value,
 
             <span
               className={cn(
-                'font-semibold text-xs',
-                isSelected ? 'text-white' : 'text-slate-300'
+                'font-bold text-xs',
+                isSelected
+                  ? 'text-brand-700 dark:text-white'
+                  : 'text-[var(--text-primary)] dark:text-slate-300'
               )}
             >
               {opt.name}
             </span>
-            <span className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{opt.sub}</span>
+            <span
+              className={cn(
+                'text-[10px] mt-0.5 line-clamp-1 font-medium',
+                isSelected
+                  ? 'text-brand-600/90 dark:text-slate-400'
+                  : 'text-[var(--text-secondary)] dark:text-slate-400'
+              )}
+            >
+              {opt.sub}
+            </span>
           </button>
         );
       })}

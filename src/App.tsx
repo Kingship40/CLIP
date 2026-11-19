@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
+import { useTheme } from './hooks/useTheme';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -15,9 +16,15 @@ import { SettingsPage } from './pages/SettingsPage';
 import { SeedancePlaygroundPage } from './pages/SeedancePlaygroundPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
+function ThemeApplier() {
+  useTheme();
+  return null;
+}
+
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <ThemeApplier />
       <Routes>
         {/* Public Marketing & Auth Routes */}
         <Route path="/" element={<LandingPage />} />

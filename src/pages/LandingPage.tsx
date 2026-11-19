@@ -12,7 +12,13 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 
 export const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundColor: 'var(--bg-page)',
+        color: 'var(--text-primary)',
+      }}
+    >
       <LandingNavbar />
       <main className="flex-1">
         <HeroSection />

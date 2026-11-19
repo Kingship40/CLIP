@@ -38,6 +38,10 @@ export interface FFmpegRenderOptions {
   outputVideoPath: string;
   startTime: number;
   endTime: number;
+  minDuration?: number;
+  maxDuration?: number;
+  exactDuration?: number;
+  toleranceSeconds?: number;
   aspectRatio?: '9:16' | '1:1' | '16:9';
   facePanX?: number; // 0 to 100%
   facePanY?: number; // 0 to 100%
@@ -218,13 +222,25 @@ export class FFmpegService {
     // 3. Generate and burn ASS hardcoded subtitles if present
     let tempAssPath: string | null = null;
     if (captionSettings && captionSettings.enabled && subtitles.length > 0) {
-      // Map subtitles relative to clip start time
+      // Check if subtitles are already relative to [0, clipDuration]
+      const isAlreadyRelative =
+        startTime > 0 &&
+        subtitles[0].start >= 0 &&
+        subtitles[subtitles.length - 1].end <= clipDuration + 2.0 &&
+        subtitles.every((s) => s.end <= clipDuration + 3.0 && s.start < clipDuration);
+
+      // Map subtitles safely without double-subtracting startTime
       const clipRelativeSubs = subtitles
-        .filter((s) => s.end > startTime && s.start < endTime)
+        .filter((s) => {
+          if (isAlreadyRelative) {
+            return s.start < clipDuration && s.end > 0;
+          }
+          return s.end > startTime && s.start < endTime;
+        })
         .map((s) => ({
           ...s,
-          start: Math.max(0, s.start - startTime),
-          end: Math.min(clipDuration, s.end - startTime),
+          start: Math.max(0, isAlreadyRelative ? s.start : s.start - startTime),
+          end: Math.min(clipDuration, isAlreadyRelative ? s.end : s.end - startTime),
         }));
 
       if (clipRelativeSubs.length > 0) {
@@ -262,17 +278,18 @@ export class FFmpegService {
     const args: string[] = [
       '-y',
       '-ss', startTime.toFixed(3),
-      '-to', endTime.toFixed(3),
       '-i', inputVideoPath,
     ];
 
     if (hasAudio && effectiveAudioSource !== inputVideoPath) {
       args.push(
         '-ss', startTime.toFixed(3),
-        '-to', endTime.toFixed(3),
         '-i', effectiveAudioSource
       );
     }
+
+    // Exact duration cut parameter placed after input
+    args.push('-t', clipDuration.toFixed(3));
 
     // Video filters
     args.push('-vf', filterChain);
@@ -319,9 +336,11 @@ export class FFmpegService {
 
     // 6. Post-Render Verification with FFprobe
     const verified = await this.verifyExportedMp4(outputVideoPath, {
-      expectedDuration: clipDuration,
+      expectedDuration: options.exactDuration || clipDuration,
+      minDuration: options.minDuration,
+      maxDuration: options.maxDuration,
       expectAudio: hasAudio,
-      toleranceSeconds: 0.35,
+      toleranceSeconds: options.toleranceSeconds || 0.35,
     });
 
     return {
@@ -341,7 +360,13 @@ export class FFmpegService {
    */
   public async verifyExportedMp4(
     filePath: string,
-    expected: { expectedDuration?: number; expectAudio?: boolean; toleranceSeconds?: number } = {}
+    expected: {
+      expectedDuration?: number;
+      minDuration?: number;
+      maxDuration?: number;
+      expectAudio?: boolean;
+      toleranceSeconds?: number;
+    } = {}
   ): Promise<MediaProbeResult> {
     const probe = await this.probeMedia(filePath);
 
@@ -357,17 +382,51 @@ export class FFmpegService {
       console.warn(`Audio codec is ${probe.audioCodec}, recommended is AAC.`);
     }
 
+    const tol = expected.toleranceSeconds || 0.45;
+
+    // Check exact or expected target duration
     if (expected.expectedDuration !== undefined) {
       const diff = Math.abs(probe.duration - expected.expectedDuration);
-      const tol = expected.toleranceSeconds || 0.45;
       if (diff > tol) {
         throw new Error(
-          `Export verification failed: Output duration (${probe.duration}s) differs from expected (${expected.expectedDuration}s) by ${diff.toFixed(2)}s.`
+          `Export verification failed: Output duration (${probe.duration.toFixed(2)}s) differs from target (${expected.expectedDuration.toFixed(2)}s) by ${diff.toFixed(2)}s (allowed tolerance: ±${tol}s).`
         );
       }
     }
 
+    // Check range duration
+    if (expected.minDuration !== undefined && probe.duration < expected.minDuration - tol) {
+      throw new Error(
+        `Export verification failed: Output duration (${probe.duration.toFixed(2)}s) is shorter than minimum allowed (${expected.minDuration}s - tolerance: ${(expected.minDuration - tol).toFixed(2)}s).`
+      );
+    }
+    if (expected.maxDuration !== undefined && probe.duration > expected.maxDuration + tol) {
+      throw new Error(
+        `Export verification failed: Output duration (${probe.duration.toFixed(2)}s) exceeds maximum allowed (${expected.maxDuration}s + tolerance: ${(expected.maxDuration + tol).toFixed(2)}s).`
+      );
+    }
+
     return probe;
+  }
+
+  /**
+   * Extracts a single frame at a specific timestamp to an image file.
+   */
+  public async extractFrame(videoPath: string, timestampSeconds: number, outputPath: string): Promise<string> {
+    if (!fs.existsSync(videoPath)) {
+      throw new Error(`Video file not found: ${videoPath}`);
+    }
+    const ffmpeg = this.getFFmpegBinary();
+    const args = [
+      '-ss', timestampSeconds.toString(),
+      '-i', videoPath,
+      '-vframes', '1',
+      '-q:v', '2',
+      '-y',
+      outputPath,
+    ];
+    await execFileAsync(ffmpeg, args);
+    return outputPath;
   }
 }
 

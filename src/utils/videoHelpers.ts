@@ -146,11 +146,15 @@ export function exportToSRT(subtitles: SubtitleSegment[], clipStartTime: number 
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
   }
 
+  const isAlreadyRelative = clipStartTime > 0 && subtitles.length > 0 && subtitles[0].start < clipStartTime;
+  const offset = isAlreadyRelative ? 0 : clipStartTime;
+
   return subtitles
     .map((sub, index) => {
-      const start = Math.max(0, sub.start >= clipStartTime && clipStartTime > 0 ? sub.start - clipStartTime : sub.start);
-      const end = Math.max(start + 0.1, sub.end >= clipStartTime && clipStartTime > 0 ? sub.end - clipStartTime : sub.end);
-      return `${index + 1}\n${formatSRTTime(start)} --> ${formatSRTTime(end)}\n${sub.text.trim()}\n`;
+      const start = Math.max(0, sub.start - offset);
+      const end = Math.max(start + 0.1, sub.end - offset);
+      const speakerPrefix = sub.speaker ? `[${sub.speaker}] ` : '';
+      return `${index + 1}\n${formatSRTTime(start)} --> ${formatSRTTime(end)}\n${speakerPrefix}${sub.text.trim()}\n`;
     })
     .join('\n');
 }
@@ -167,13 +171,18 @@ export function exportToVTT(subtitles: SubtitleSegment[], clipStartTime: number 
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
   }
 
+  const isAlreadyRelative = clipStartTime > 0 && subtitles.length > 0 && subtitles[0].start < clipStartTime;
+  const offset = isAlreadyRelative ? 0 : clipStartTime;
+
   const lines = ['WEBVTT\n'];
   subtitles.forEach((sub, index) => {
-    const start = Math.max(0, sub.start >= clipStartTime && clipStartTime > 0 ? sub.start - clipStartTime : sub.start);
-    const end = Math.max(start + 0.1, sub.end >= clipStartTime && clipStartTime > 0 ? sub.end - clipStartTime : sub.end);
+    const start = Math.max(0, sub.start - offset);
+    const end = Math.max(start + 0.1, sub.end - offset);
+    const speakerPrefix = sub.speaker ? `<v ${sub.speaker}>` : '';
+    const speakerSuffix = sub.speaker ? `</v>` : '';
     lines.push(`${index + 1}`);
     lines.push(`${formatVTTTime(start)} --> ${formatVTTTime(end)}`);
-    lines.push(`${sub.text.trim()}\n`);
+    lines.push(`${speakerPrefix}${sub.text.trim()}${speakerSuffix}\n`);
   });
 
   return lines.join('\n');

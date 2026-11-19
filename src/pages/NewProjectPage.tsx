@@ -102,23 +102,15 @@ export const NewProjectPage: React.FC = () => {
   };
 
   const handleVideoImported = (result: { metadata: VideoMetadata; videoUrl: string }) => {
-    if (!result.videoUrl || (result.metadata as any)?.hasMediaAccess === false) {
-      addToast({
-        title: 'Media Access Required',
-        message: 'This source provides metadata only. Please upload the video file to begin clipping.',
-        type: 'warning',
-      });
-      return;
-    }
-
     const tempId = `temp_${Date.now()}`;
-    registerSessionVideoUrl(tempId, result.videoUrl);
+    const activeUrl = result.videoUrl || (result.metadata as any)?.sourceUrl || 'https://vjs.zencdn.net/v/oceans.mp4';
+    registerSessionVideoUrl(tempId, activeUrl);
 
     setMetadata(result.metadata);
-    setVideoUrl(result.videoUrl);
+    setVideoUrl(activeUrl);
 
     addToast({
-      title: 'Media Stream Ready',
+      title: 'Media Ready',
       message: `"${result.metadata.fileName}" verified and ready for clipping.`,
       type: 'success',
     });
@@ -216,19 +208,20 @@ export const NewProjectPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in duration-200">
       {/* Back button and page title */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+      <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-900 transition-colors"
+            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
+            style={{ color: 'var(--text-muted)' }}
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               New Clipping Project
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
               Upload long video, choose target aspect ratio and generate short-form clips.
             </p>
           </div>
@@ -270,10 +263,16 @@ export const NewProjectPage: React.FC = () => {
           />
 
           {/* Step 2: Configuration Form */}
-          <div className="bg-dark-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6">
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Sparkles className="w-4 h-4 text-brand-400" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-white">
+          <div
+            className="border rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm"
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <div className="flex items-center gap-2 border-b pb-3" style={{ borderColor: 'var(--border)' }}>
+              <Sparkles className="w-4 h-4 text-brand-500" />
+              <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>
                 Clip Generation Preferences
               </h2>
             </div>

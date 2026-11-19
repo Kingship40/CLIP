@@ -1,4 +1,9 @@
 import { SubtitleSegment } from '../types';
+import {
+  resolveDurationConstraint,
+  enforceClipDurationBoundaries,
+  DurationConstraint,
+} from './intelligence/durationValidator';
 
 export interface ExtractedAIClip {
   id: string;
@@ -220,8 +225,10 @@ export async function analyzeVideoWithGemini(
   model: string,
   duration: number,
   frames: VideoFrameSample[],
-  videoTitle?: string
+  videoTitle?: string,
+  durationConstraint?: DurationConstraint | string | number
 ): Promise<ExtractedAIClip[]> {
+  const constraint = resolveDurationConstraint(durationConstraint);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
 
   const promptText = `
@@ -229,9 +236,9 @@ You are a Lead AI Video Editor and viral content strategist analyzing a video ($
 You are given ${frames.length} chronological visual frames sampled across the video timeline.
 
 Your job:
-1. Watch the video frames carefully and identify 3-4 diverse, high-retention short clips (12 to 45 seconds).
+1. Watch the video frames carefully and identify 3-4 diverse, high-retention short clips strictly respecting duration: ${constraint.label} (between ${constraint.minSeconds} and ${constraint.maxSeconds} seconds).
 2. Classify each clip into one of the 18 viral categories: "hook_intro", "revelation", "humor_punchline", "controversial_debate", "memorable_quote", "actionable_advice", "emotional_story", "relatable_frustration", "suspense_tension", "insightful_qa", "clear_explanation", "counterintuitive_fact", "mini_narrative", "motivational", "discussion_starter".
-3. For each clip, pinpoint the exact start and end timestamps ensuring the setup is included and ending on a complete punchline or conclusion (never cut mid-sentence).
+3. For each clip, pinpoint the exact start and end timestamps ensuring the setup is included and ending on a complete punchline or conclusion (never cut mid-sentence). Clip duration MUST be between ${constraint.minSeconds}s and ${constraint.maxSeconds}s.
 4. Write a scroll-stopping title for TikTok / YouTube Shorts / Instagram Reels.
 5. Provide overall viral score (80-99), rationale, and 8-factor score breakdown: hookStrength (0-100), emotionalIntellectual (0-100), clarityContext (0-100), payoffValue (0-100).
 
@@ -318,29 +325,35 @@ JSON Structure:
     throw new Error('Gemini did not return an array of clips.');
   }
 
-  return parsed.map((c: any, index: number) => ({
-    id: c.id || `gemini_clip_${index + 1}`,
-    title: c.title || `Viral Highlight ${index + 1}`,
-    start: Math.max(0, parseFloat(c.start) || 0),
-    end: Math.min(duration, parseFloat(c.end) || Math.min(30, duration)),
-    viralScore: parseInt(c.viralScore, 10) || 94,
-    aspect: '9:16',
-    category: c.category || (index === 0 ? 'hook_intro' : index === 1 ? 'actionable_advice' : 'revelation'),
-    summary: c.summary || 'AI identified high-dopamine retention curve.',
-    rationale: c.rationale || c.summary || 'High retention moment with clear setup and conclusion.',
-    hashtags: Array.isArray(c.hashtags) ? c.hashtags : ['#shorts', '#viral'],
-    subtitles: Array.isArray(c.subtitles) && c.subtitles.length > 0 ? c.subtitles : [],
-    scoreBreakdown: c.scoreBreakdown || {
-      hookStrength: 92,
-      emotionalIntellectual: 90,
-      clarityContext: 88,
-      payoffValue: 90,
-      narrativeCompleteness: 90,
-      shareability: 91,
-      avQuality: 90,
-      boundaryQuality: 88,
-    },
-  }));
+  return parsed.map((c: any, index: number) => {
+    const rawStart = Math.max(0, parseFloat(c.start) || 0);
+    const rawEnd = Math.min(duration, parseFloat(c.end) || Math.min(constraint.targetSeconds, duration));
+    const bounded = enforceClipDurationBoundaries(rawStart, rawEnd, constraint, duration);
+
+    return {
+      id: c.id || `gemini_clip_${index + 1}`,
+      title: c.title || `Viral Highlight ${index + 1}`,
+      start: bounded.startTime,
+      end: bounded.endTime,
+      viralScore: parseInt(c.viralScore, 10) || 94,
+      aspect: '9:16',
+      category: c.category || (index === 0 ? 'hook_intro' : index === 1 ? 'actionable_advice' : 'revelation'),
+      summary: c.summary || 'AI identified high-dopamine retention curve.',
+      rationale: c.rationale || c.summary || 'High retention moment with clear setup and conclusion.',
+      hashtags: Array.isArray(c.hashtags) ? c.hashtags : ['#shorts', '#viral'],
+      subtitles: Array.isArray(c.subtitles) && c.subtitles.length > 0 ? c.subtitles : [],
+      scoreBreakdown: c.scoreBreakdown || {
+        hookStrength: 92,
+        emotionalIntellectual: 90,
+        clarityContext: 88,
+        payoffValue: 90,
+        narrativeCompleteness: 90,
+        shareability: 91,
+        avQuality: 90,
+        boundaryQuality: 88,
+      },
+    };
+  });
 }
 
 /**
@@ -351,15 +364,17 @@ export async function analyzeVideoWithOpenAI(
   model: string,
   duration: number,
   frames: VideoFrameSample[],
-  videoTitle?: string
+  videoTitle?: string,
+  durationConstraint?: DurationConstraint | string | number
 ): Promise<ExtractedAIClip[]> {
+  const constraint = resolveDurationConstraint(durationConstraint);
   const content: any[] = [
     {
       type: 'text',
       text: `You are an expert short-form video editor for TikTok and Reels analyzing a video (${videoTitle || 'Video'}, duration: ${duration}s).
-Watch these chronological visual frames and identify 3-4 viral short clips (15s to 45s).
+Watch these chronological visual frames and identify 3-4 viral short clips strictly respecting duration: ${constraint.label} (between ${constraint.minSeconds} and ${constraint.maxSeconds} seconds).
 Classify each clip into one of the 18 viral categories: "hook_intro", "revelation", "humor_punchline", "controversial_debate", "memorable_quote", "actionable_advice", "emotional_story", "relatable_frustration", "suspense_tension", "insightful_qa", "clear_explanation", "counterintuitive_fact", "mini_narrative", "motivational", "discussion_starter".
-Ensure complete setup and ending on a punchline or payoff (no mid-sentence cuts).
+Ensure complete setup and ending on a punchline or payoff (no mid-sentence cuts). Clip duration MUST be between ${constraint.minSeconds}s and ${constraint.maxSeconds}s.
 
 Return ONLY a valid JSON array matching this exact schema:
 [
@@ -434,57 +449,70 @@ Return ONLY a valid JSON array matching this exact schema:
     .trim();
 
   const parsed = JSON.parse(cleaned);
-  return parsed.map((c: any, index: number) => ({
-    id: c.id || `openai_clip_${index + 1}`,
-    title: c.title || `Viral Moment ${index + 1}`,
-    start: Math.max(0, parseFloat(c.start) || 0),
-    end: Math.min(duration, parseFloat(c.end) || Math.min(30, duration)),
-    viralScore: parseInt(c.viralScore, 10) || 95,
-    aspect: '9:16',
-    category: c.category || (index === 0 ? 'hook_intro' : index === 1 ? 'actionable_advice' : 'revelation'),
-    summary: c.summary || 'Detected peak engagement inflection.',
-    rationale: c.rationale || c.summary || 'Strong conversational retention curve.',
-    hashtags: c.hashtags || ['#shorts', '#viral'],
-    subtitles: c.subtitles || [],
-    scoreBreakdown: c.scoreBreakdown || {
-      hookStrength: 94,
-      emotionalIntellectual: 92,
-      clarityContext: 90,
-      payoffValue: 92,
-      narrativeCompleteness: 90,
-      shareability: 92,
-      avQuality: 90,
-      boundaryQuality: 90,
-    },
-  }));
+  return parsed.map((c: any, index: number) => {
+    const rawStart = Math.max(0, parseFloat(c.start) || 0);
+    const rawEnd = Math.min(duration, parseFloat(c.end) || Math.min(constraint.targetSeconds, duration));
+    const bounded = enforceClipDurationBoundaries(rawStart, rawEnd, constraint, duration);
+
+    return {
+      id: c.id || `openai_clip_${index + 1}`,
+      title: c.title || `Viral Moment ${index + 1}`,
+      start: bounded.startTime,
+      end: bounded.endTime,
+      viralScore: parseInt(c.viralScore, 10) || 95,
+      aspect: '9:16',
+      category: c.category || (index === 0 ? 'hook_intro' : index === 1 ? 'actionable_advice' : 'revelation'),
+      summary: c.summary || 'Detected peak engagement inflection.',
+      rationale: c.rationale || c.summary || 'Strong conversational retention curve.',
+      hashtags: c.hashtags || ['#shorts', '#viral'],
+      subtitles: c.subtitles || [],
+      scoreBreakdown: c.scoreBreakdown || {
+        hookStrength: 94,
+        emotionalIntellectual: 92,
+        clarityContext: 90,
+        payoffValue: 92,
+        narrativeCompleteness: 90,
+        shareability: 92,
+        avQuality: 90,
+        boundaryQuality: 90,
+      },
+    };
+  });
 }
 
 /**
  * Free Client-Side Energy & Scene Change Detector (Zero API Key Fallback).
- * Computes cut boundaries from the video duration and frame timestamps.
+ * Computes cut boundaries strictly conforming to the user-selected duration constraint.
  */
 export function analyzeVideoWithClientEngine(
   duration: number,
-  videoTitle?: string
+  videoTitle?: string,
+  durationConstraint?: DurationConstraint | string | number
 ): ExtractedAIClip[] {
-  const safeDur = Math.max(15, duration || 60);
+  const constraint = resolveDurationConstraint(durationConstraint);
+  const safeDur = Math.max(constraint.minSeconds, duration || 60);
   const cleanTitle = (videoTitle || 'Uploaded Video').replace(/\.[^/.]+$/, '');
+  const targetSeconds = Math.min(safeDur, constraint.targetSeconds);
 
-  const c1Start = Math.min(5.0, safeDur * 0.05);
-  const c1End = Math.min(c1Start + 24.0, safeDur * 0.35);
+  // Compute boundaries for 3 candidate clips strictly bounded by the constraint
+  const c1RawStart = Math.min(5.0, safeDur * 0.05);
+  const c1RawEnd = Math.min(safeDur, c1RawStart + targetSeconds);
+  const c1Bounded = enforceClipDurationBoundaries(c1RawStart, c1RawEnd, constraint, safeDur);
 
-  const c2Start = Math.min(c1End + 6.0, safeDur * 0.4);
-  const c2End = Math.min(c2Start + 28.0, safeDur * 0.72);
+  const c2RawStart = Math.min(Math.max(0, safeDur - targetSeconds), Math.max(c1Bounded.endTime + 2, safeDur * 0.35));
+  const c2RawEnd = Math.min(safeDur, c2RawStart + targetSeconds);
+  const c2Bounded = enforceClipDurationBoundaries(c2RawStart, c2RawEnd, constraint, safeDur);
 
-  const c3Start = Math.min(c2End + 4.0, safeDur * 0.75);
-  const c3End = Math.min(c3Start + 25.0, safeDur);
+  const c3RawStart = Math.min(Math.max(0, safeDur - targetSeconds), Math.max(c2Bounded.endTime + 2, safeDur * 0.65));
+  const c3RawEnd = Math.min(safeDur, c3RawStart + targetSeconds);
+  const c3Bounded = enforceClipDurationBoundaries(c3RawStart, c3RawEnd, constraint, safeDur);
 
   return [
     {
       id: 'local_clip_1',
       title: `${cleanTitle}: The High-Dopamine Opening Hook`,
-      start: Math.round(c1Start * 10) / 10,
-      end: Math.round(c1End * 10) / 10,
+      start: c1Bounded.startTime,
+      end: c1Bounded.endTime,
       viralScore: 97,
       aspect: '9:16',
       category: 'hook_intro',
@@ -504,15 +532,15 @@ export function analyzeVideoWithClientEngine(
       subtitles: [
         {
           id: 'sub_loc_1',
-          start: c1Start,
-          end: c1Start + (c1End - c1Start) * 0.45,
+          start: c1Bounded.startTime,
+          end: c1Bounded.startTime + c1Bounded.duration * 0.45,
           text: `Why 99% of creators fail to capture retention in the first three seconds`,
           highlightWords: ['99%', 'creators', 'retention', 'three seconds'],
         },
         {
           id: 'sub_loc_2',
-          start: c1Start + (c1End - c1Start) * 0.46,
-          end: c1End,
+          start: c1Bounded.startTime + c1Bounded.duration * 0.46,
+          end: c1Bounded.endTime,
           text: 'is because they start with long intros instead of an immediate pattern break.',
           highlightWords: ['long intros', 'pattern break'],
         },
@@ -521,8 +549,8 @@ export function analyzeVideoWithClientEngine(
     {
       id: 'local_clip_2',
       title: `${cleanTitle}: Peak Contrast & Core Highlight`,
-      start: Math.round(c2Start * 10) / 10,
-      end: Math.round(c2End * 10) / 10,
+      start: c2Bounded.startTime,
+      end: c2Bounded.endTime,
       viralScore: 94,
       aspect: '9:16',
       category: 'actionable_advice',
@@ -542,15 +570,15 @@ export function analyzeVideoWithClientEngine(
       subtitles: [
         {
           id: 'sub_loc_3',
-          start: c2Start,
-          end: c2Start + (c2End - c2Start) * 0.5,
+          start: c2Bounded.startTime,
+          end: c2Bounded.startTime + c2Bounded.duration * 0.5,
           text: 'Most people overlook this exact step when creating content.',
           highlightWords: ['overlook', 'exact', 'step'],
         },
         {
           id: 'sub_loc_4',
-          start: c2Start + (c2End - c2Start) * 0.51,
-          end: c2End,
+          start: c2Bounded.startTime + c2Bounded.duration * 0.51,
+          end: c2Bounded.endTime,
           text: 'By focusing on high retention hooks, your reach multiplies.',
           highlightWords: ['retention', 'hooks', 'multiplies'],
         },
@@ -559,8 +587,8 @@ export function analyzeVideoWithClientEngine(
     {
       id: 'local_clip_3',
       title: `${cleanTitle}: The Contrarian Final Verdict`,
-      start: Math.round(c3Start * 10) / 10,
-      end: Math.round(c3End * 10) / 10,
+      start: c3Bounded.startTime,
+      end: c3Bounded.endTime,
       viralScore: 91,
       aspect: '9:16',
       category: 'counterintuitive_fact',
@@ -580,15 +608,15 @@ export function analyzeVideoWithClientEngine(
       subtitles: [
         {
           id: 'sub_loc_5',
-          start: c3Start,
-          end: c3Start + (c3End - c3Start) * 0.5,
+          start: c3Bounded.startTime,
+          end: c3Bounded.startTime + c3Bounded.duration * 0.5,
           text: 'They don’t work twice as hard; they build workflows that multiply their reach.',
           highlightWords: ['twice as hard', 'workflows', 'reach'],
         },
         {
           id: 'sub_loc_6',
-          start: c3Start + (c3End - c3Start) * 0.51,
-          end: c3End,
+          start: c3Bounded.startTime + c3Bounded.duration * 0.51,
+          end: c3Bounded.endTime,
           text: 'And that single optimization fundamentally changes your distribution curves.',
           highlightWords: ['single optimization', 'distribution curves'],
         },

@@ -25,15 +25,22 @@ export class AdvancedFaceDetector {
   private hardwareDetector: any = null;
 
   constructor() {
-    this.workingCanvas = document.createElement('canvas');
-    this.workingCanvas.width = 480;
-    this.workingCanvas.height = 270;
-    this.workingCtx = this.workingCanvas.getContext('2d', { willReadFrequently: true });
+    if (typeof document !== 'undefined') {
+      this.workingCanvas = document.createElement('canvas');
+      this.workingCanvas.width = 480;
+      this.workingCanvas.height = 270;
+      this.workingCtx = this.workingCanvas.getContext('2d', { willReadFrequently: true });
 
-    this.highResCanvas = document.createElement('canvas');
-    this.highResCanvas.width = 960;
-    this.highResCanvas.height = 540;
-    this.highResCtx = this.highResCanvas.getContext('2d', { willReadFrequently: true });
+      this.highResCanvas = document.createElement('canvas');
+      this.highResCanvas.width = 960;
+      this.highResCanvas.height = 540;
+      this.highResCtx = this.highResCanvas.getContext('2d', { willReadFrequently: true });
+    } else {
+      this.workingCanvas = null as any;
+      this.workingCtx = null;
+      this.highResCanvas = null as any;
+      this.highResCtx = null;
+    }
 
     this.hasHardwareDetector = typeof window !== 'undefined' && 'FaceDetector' in window;
     if (this.hasHardwareDetector) {

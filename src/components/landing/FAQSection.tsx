@@ -28,16 +28,16 @@ export const FAQSection: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="py-20 bg-dark-950 border-t border-slate-900">
+    <section id="faq" className="py-20 border-t" style={{ borderColor: 'var(--border)' }}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
             Got Questions?
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mt-2 mb-3 tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Frequently Asked Questions
           </h2>
-          <p className="text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             Everything you need to know about the AI video clipping workflow.
           </p>
         </div>
@@ -48,22 +48,33 @@ export const FAQSection: React.FC = () => {
             return (
               <div
                 key={i}
-                className="rounded-xl border border-slate-800 bg-dark-900 overflow-hidden transition-colors"
+                className="rounded-xl border overflow-hidden transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: 'var(--border)',
+                }}
               >
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : i)}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-white hover:text-brand-300 transition-colors"
+                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base hover:text-brand-500 transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-brand-400' : ''
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-brand-500' : 'text-[var(--text-muted)]'
                     }`}
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 pt-3">
+                  <div
+                    className="px-4 pb-5 sm:px-5 sm:pb-5 text-xs sm:text-sm leading-relaxed border-t pt-3"
+                    style={{
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
                     {faq.a}
                   </div>
                 )}

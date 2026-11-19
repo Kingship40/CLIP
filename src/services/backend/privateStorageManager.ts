@@ -147,6 +147,10 @@ export class PrivateStorageManager {
     return record.sourceFilePath;
   }
 
+  public getSourceFilePath(jobId: string): string | null {
+    return this.getInternalSourcePath(jobId);
+  }
+
   /**
    * Saves a generated vertical short clip into private clip storage.
    */

@@ -16,6 +16,8 @@ import {
   Subtitles,
   Target,
   Users,
+  User,
+  Crosshair,
 } from 'lucide-react';
 import { CaptionOverlay } from '../editor/CaptionOverlay';
 import { SubtitleSegment, CaptionSettings, FaceTrackingMode } from '../../types';
@@ -408,9 +410,16 @@ export const BeforeAfterVideoPlayer: React.FC<BeforeAfterVideoPlayerProps> = ({
             <button
               type="button"
               onClick={() => setActiveAudioStream(activeAudioStream === 'processed' ? 'original' : 'processed')}
-              className="text-xs font-semibold text-cyan-300 hover:text-white transition-colors"
+              className="text-xs font-semibold text-cyan-300 hover:text-white transition-colors flex items-center gap-1"
             >
-              {activeAudioStream === 'processed' ? '✨ Seedance 48kHz' : 'Source'}
+              {activeAudioStream === 'processed' ? (
+                <>
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>Seedance 48kHz</span>
+                </>
+              ) : (
+                'Source'
+              )}
             </button>
           </div>
         </div>
@@ -437,40 +446,40 @@ export const BeforeAfterVideoPlayer: React.FC<BeforeAfterVideoPlayerProps> = ({
                 title="Auto-detect speaker face and dynamically glide camera"
               >
                 <Sparkles className="w-3 h-3 text-cyan-300" />
-                <span>🎯 Auto Track ({Math.round(smoothedPanX)}%)</span>
+                <span>Auto Track ({Math.round(smoothedPanX)}%)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('left')}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors flex items-center gap-1 ${
                   framingMode === 'left' ? 'bg-cyan-500 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Frame Left Speaker (~25% X)"
               >
-                👈 Left
+                <User className="w-3 h-3" /> Left
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('center')}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors flex items-center gap-1 ${
                   framingMode === 'center' ? 'bg-cyan-500 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Frame Center Stage (~50% X)"
               >
-                ⊙ Center
+                <Crosshair className="w-3 h-3" /> Center
               </button>
 
               <button
                 type="button"
                 onClick={() => handleSelectFraming('right')}
-                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ${
+                className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors flex items-center gap-1 ${
                   framingMode === 'right' ? 'bg-cyan-500 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
                 title="Frame Right Speaker (~75% X)"
               >
-                👉 Right
+                <User className="w-3 h-3" /> Right
               </button>
 
               <button
@@ -482,7 +491,7 @@ export const BeforeAfterVideoPlayer: React.FC<BeforeAfterVideoPlayerProps> = ({
                 title="Dual Speaker Stack for 2-person interviews/podcasts"
               >
                 <Users className="w-3 h-3" />
-                <span>👥 Dual Split</span>
+                <span>Dual Split</span>
               </button>
 
               <button
@@ -494,7 +503,7 @@ export const BeforeAfterVideoPlayer: React.FC<BeforeAfterVideoPlayerProps> = ({
                 title="Full 16:9 uncropped view with ambient blurred fill"
               >
                 <Maximize2 className="w-3 h-3" />
-                <span>🖼️ Fit+Blur</span>
+                <span>Fit+Blur</span>
               </button>
             </div>
 

@@ -1068,12 +1068,12 @@ export const SeedancePlaygroundPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-3 gap-1.5 text-[10px] font-semibold">
                 {[
-                  { id: 'auto', label: '🎯 Auto Track', desc: 'Face centroid' },
-                  { id: 'left', label: '👈 Left Host', desc: '25% lock' },
-                  { id: 'center', label: '⊙ Center', desc: '50% lock' },
-                  { id: 'right', label: '👉 Right Guest', desc: '75% lock' },
-                  { id: 'split-dual', label: '👥 Dual Split', desc: 'Podcast stack' },
-                  { id: 'fit-blur', label: '🖼️ Fit + Blur', desc: 'Full 16:9' },
+                  { id: 'auto', label: 'Auto Track', desc: 'Face centroid' },
+                  { id: 'left', label: 'Left Host', desc: '25% lock' },
+                  { id: 'center', label: 'Center', desc: '50% lock' },
+                  { id: 'right', label: 'Right Guest', desc: '75% lock' },
+                  { id: 'split-dual', label: 'Dual Split', desc: 'Podcast stack' },
+                  { id: 'fit-blur', label: 'Fit + Blur', desc: 'Full 16:9' },
                 ].map((mode) => (
                   <button
                     key={mode.id}

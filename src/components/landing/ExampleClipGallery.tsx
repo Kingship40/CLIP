@@ -10,23 +10,28 @@ export const ExampleClipGallery: React.FC = () => {
   const [activeSample, setActiveSample] = useState<SampleVideo | null>(null);
 
   return (
-    <section id="examples" className="py-20 md:py-28 bg-dark-950 border-t border-slate-900">
+    <section id="examples" className="py-20 md:py-28 bg-[var(--bg-page)] dark:bg-dark-950 border-t border-[var(--border)] dark:border-slate-900 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-4">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-brand-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Real Output Examples
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[var(--text-primary)] dark:text-white mt-2 tracking-tight">
               Curated Sample Projects
             </h2>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-[var(--text-secondary)] dark:text-slate-400 text-sm mt-1 leading-relaxed">
               Explore how ClipForge AI extracts atomic short segments from long-form recordings.
             </p>
           </div>
 
           <Link to="/dashboard">
-            <Button variant="secondary" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+            <Button
+              variant="secondary"
+              size="sm"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+              className="shadow-sm font-semibold"
+            >
               Explore Demo Studio
             </Button>
           </Link>
@@ -36,10 +41,10 @@ export const ExampleClipGallery: React.FC = () => {
           {SAMPLE_VIDEOS.map((sample) => (
             <div
               key={sample.id}
-              className="bg-dark-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all group flex flex-col justify-between"
+              className="bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-brand-300 dark:hover:border-slate-700 transition-all group flex flex-col justify-between"
             >
               <div
-                className="relative aspect-video bg-dark-950 cursor-pointer overflow-hidden"
+                className="relative aspect-video bg-[var(--bg-surface-2)] dark:bg-dark-950 cursor-pointer overflow-hidden"
                 onClick={() => setActiveSample(sample)}
               >
                 <img
@@ -47,8 +52,8 @@ export const ExampleClipGallery: React.FC = () => {
                   alt={sample.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-dark-950/40 group-hover:bg-dark-950/20 transition-colors flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-brand-500/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="absolute inset-0 bg-dark-950/30 group-hover:bg-dark-950/15 transition-colors flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-brand-600/95 hover:bg-brand-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                     <Play className="w-5 h-5 fill-current ml-0.5" />
                   </div>
                 </div>
@@ -56,29 +61,29 @@ export const ExampleClipGallery: React.FC = () => {
                 <span className="absolute bottom-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-mono text-white">
                   {formatDuration(sample.duration)}
                 </span>
-                <span className="absolute top-2 left-2 bg-brand-500 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                <span className="absolute top-2 left-2 bg-[#EAE8FF] text-brand-700 dark:bg-brand-500 dark:text-white border border-brand-200 dark:border-transparent px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
                   {sample.category}
                 </span>
               </div>
 
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
-                  <h4 className="font-bold text-white text-base group-hover:text-brand-300 transition-colors mb-1.5">
+                  <h4 className="font-bold text-[var(--text-primary)] dark:text-white text-base group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors mb-1.5">
                     {sample.title}
                   </h4>
-                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                  <p className="text-xs text-[var(--text-secondary)] dark:text-slate-400 leading-relaxed line-clamp-2">
                     {sample.description}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1 text-amber-300 font-bold">
+                <div className="mt-4 pt-3 border-t border-[var(--border)] dark:border-slate-800/80 flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-300 font-bold">
                     <Sparkles className="w-3.5 h-3.5" />
                     94+ Viral Score
                   </span>
 
                   <Link to="/dashboard/new">
-                    <button className="text-brand-400 hover:text-white font-semibold transition-colors flex items-center gap-1">
+                    <button className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-white font-semibold transition-colors flex items-center gap-1">
                       <span>Clip this video</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>

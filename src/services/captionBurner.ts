@@ -48,29 +48,64 @@ export function renderCaptionToCanvas(
   // 3. Determine base font size scaled to canvas dimensions
   const scaleRatio = canvasHeight / 1280.0;
   const baseSizePx = getFontSizePx(settings.fontSize, scaleRatio);
+  const fontFamily = settings.fontFamily || 'Montserrat';
 
   ctx.save();
-  ctx.font = `900 ${baseSizePx}px "Inter", "Segoe UI", system-ui, -apple-system, sans-serif`;
+  ctx.font = `900 ${baseSizePx}px "${fontFamily}", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   // 4. Wrap text into lines fitting within 86% of canvas width
   const maxLineWidth = canvasWidth * 0.86;
-  const rawWords = activeSub.text.trim().split(/\s+/);
+  const rawWords = activeSub.text.trim().split(/\s+/).filter(Boolean);
+
+  // Text Case Transformation
+  const formatWord = (w: string) => {
+    if (settings.textCase === 'uppercase' || (!settings.textCase && (settings.preset === 'hormozi' || settings.preset === 'boxed'))) {
+      return w.toUpperCase();
+    }
+    if (settings.textCase === 'title') {
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }
+    return w;
+  };
+
+  // Active word detection for kinetic word-by-word timing
+  const activeTime = (currentTime >= activeSub.start && currentTime <= activeSub.end)
+    ? currentTime
+    : (elapsedInClip >= activeSub.start && elapsedInClip <= activeSub.end)
+      ? elapsedInClip
+      : absTime;
+
+  let activeWordIdx = -1;
+  if (activeSub.words && activeSub.words.length > 0) {
+    activeWordIdx = activeSub.words.findIndex((w) => activeTime >= w.start && activeTime <= w.end);
+  }
+  if (activeWordIdx === -1 && rawWords.length > 0) {
+    const progress = Math.max(0, Math.min(1, (activeTime - activeSub.start) / Math.max(0.1, activeSub.end - activeSub.start)));
+    activeWordIdx = Math.min(rawWords.length - 1, Math.floor(progress * rawWords.length));
+  }
+
+  // Handle single-word display mode
+  const wordsToRender = settings.displayMode === 'single-word' && rawWords[activeWordIdx]
+    ? [rawWords[activeWordIdx]]
+    : rawWords;
+
   const lines: string[][] = [];
   let currentLine: string[] = [];
   let currentLineWidth = 0;
 
   const spaceWidth = ctx.measureText(' ').width;
 
-  for (const word of rawWords) {
+  for (const rawWord of wordsToRender) {
+    const word = formatWord(rawWord);
     const wordWidth = ctx.measureText(word).width;
     if (currentLineWidth + wordWidth > maxLineWidth && currentLine.length > 0) {
       lines.push(currentLine);
-      currentLine = [word];
+      currentLine = [rawWord];
       currentLineWidth = wordWidth + spaceWidth;
     } else {
-      currentLine.push(word);
+      currentLine.push(rawWord);
       currentLineWidth += wordWidth + spaceWidth;
     }
   }
@@ -83,7 +118,9 @@ export function renderCaptionToCanvas(
   const totalTextHeight = lines.length * lineHeight;
   let targetCenterY = canvasHeight * 0.82; // Default bottom
 
-  if (settings.position === 'top') {
+  if (settings.yOffset !== undefined && settings.yOffset >= 5 && settings.yOffset <= 95) {
+    targetCenterY = (settings.yOffset / 100) * canvasHeight;
+  } else if (settings.position === 'top') {
     targetCenterY = canvasHeight * 0.12;
   } else if (settings.position === 'middle') {
     targetCenterY = canvasHeight * 0.50;
@@ -115,50 +152,103 @@ export function renderCaptionToCanvas(
   const highlightWords = (activeSub.highlightWords || []).map((w) => w.toLowerCase().replace(/[^\w]/g, ''));
   const highlightColor = settings.highlightColor || '#FACC15';
   const textColor = settings.textColor || '#FFFFFF';
+  const outlineStroke = getOutlineStrokeWidth(settings.outlineWidth, baseSizePx);
+  const customOutlineColor = settings.outlineColor || '#000000';
 
   const startY = targetCenterY - ((lines.length - 1) * lineHeight) / 2;
 
+  // Draw Speaker Label Badge if enabled
+  if (settings.speakerLabels && activeSub.speaker) {
+    drawSpeakerBadge(ctx, activeSub.speaker, canvasWidth / 2, startY - lineHeight * 0.85, baseSizePx);
+  }
+
+  let globalWordCounter = 0;
+
   lines.forEach((lineWords, lineIdx) => {
     const lineY = startY + lineIdx * lineHeight;
-    const fullLineStr = lineWords.join(' ');
+    const formattedLineWords = lineWords.map(formatWord);
+    const fullLineStr = formattedLineWords.join(' ');
     const lineMetric = ctx.measureText(fullLineStr);
     const lineW = lineMetric.width;
 
     // A. Draw Preset-specific Backdrop
-    drawPresetBackdrop(ctx, settings.preset, lineW, baseSizePx, canvasWidth / 2, lineY);
+    drawPresetBackdrop(ctx, settings.preset, lineW, baseSizePx, canvasWidth / 2, lineY, settings.backgroundColor, settings.backgroundOpacity);
 
-    // B. Draw Words with Highlight coloring and Outlines
+    // B. Draw Words with Highlight coloring, Boxed Pill, Outlines and Kinetic Bounce
     let currentX = canvasWidth / 2 - lineW / 2;
 
-    for (const word of lineWords) {
-      const clean = word.toLowerCase().replace(/[^\w]/g, '');
-      const isHighlighted = highlightWords.some((hw) => clean.includes(hw));
+    for (let wordIdxInLine = 0; wordIdxInLine < lineWords.length; wordIdxInLine++) {
+      const rawWord = lineWords[wordIdxInLine];
+      const word = formattedLineWords[wordIdxInLine];
+      const clean = rawWord.toLowerCase().replace(/[^\w]/g, '');
+      const isKeywordHighlight = highlightWords.some((hw) => clean.includes(hw));
+      const isWordSpokenNow = (settings.displayMode === 'word-highlight' || settings.displayMode === 'boxed-word' || settings.displayMode === 'karaoke' || !settings.displayMode) &&
+        (globalWordCounter === activeWordIdx);
+      const isHighlighted = isKeywordHighlight || isWordSpokenNow;
+
+      globalWordCounter++;
+
       const wordMetrics = ctx.measureText(word);
       const wordW = wordMetrics.width;
       const wordCenterX = currentX + wordW / 2;
 
       ctx.save();
 
-      if (settings.preset === 'karaoke') {
-        // Neon karaoke stroke outline
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = Math.max(4, Math.round(baseSizePx * 0.16));
+      // Dynamic scale / bounce on active word (VEED-style kinetic bounce)
+      const isBoxedStyle = settings.preset === 'boxed' || settings.displayMode === 'boxed-word';
+      const shouldScale = isWordSpokenNow && (settings.preset === 'bounce' || isBoxedStyle || (settings.activeWordScale && settings.activeWordScale > 1));
+      if (shouldScale) {
+        const scaleVal = settings.activeWordScale || (settings.preset === 'bounce' ? 1.18 : 1.08);
+        ctx.translate(wordCenterX, lineY);
+        ctx.scale(scaleVal, scaleVal);
+        ctx.translate(-wordCenterX, -lineY);
+      }
+
+      // Boxed Active Word Pill (VEED signature highlighted word pill)
+      if (isWordSpokenNow && isBoxedStyle) {
+        const padX = baseSizePx * 0.32;
+        const padY = baseSizePx * 0.16;
+        const pillW = wordW + padX * 2;
+        const pillH = baseSizePx * 1.25 + padY * 2;
+        const pillRadius = Math.round(pillH * 0.28);
+        ctx.fillStyle = settings.activeWordBgColor || highlightColor;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 2;
+        drawRoundedRect(ctx, wordCenterX - pillW / 2, lineY - pillH / 2, pillW, pillH, pillRadius);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+      }
+
+      // Stroke Outline (omitted inside solid boxed pill for crisp contrast)
+      const isInsideBoxedPill = isWordSpokenNow && isBoxedStyle;
+      if (outlineStroke > 0 && !isInsideBoxedPill) {
+        ctx.strokeStyle = customOutlineColor;
+        ctx.lineWidth = outlineStroke;
         ctx.lineJoin = 'round';
         ctx.strokeText(word, wordCenterX, lineY);
+      }
 
+      if (isInsideBoxedPill) {
+        ctx.fillStyle = settings.activeWordTextColor || '#000000';
+        ctx.fillText(word, wordCenterX, lineY);
+      } else if (settings.preset === 'karaoke') {
         if (isHighlighted) {
           ctx.shadowColor = highlightColor;
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = 16;
         }
         ctx.fillStyle = isHighlighted ? highlightColor : textColor;
         ctx.fillText(word, wordCenterX, lineY);
+      } else if (settings.preset === 'bounce') {
+        if (isHighlighted) {
+          ctx.shadowColor = highlightColor;
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = highlightColor;
+        } else {
+          ctx.fillStyle = textColor;
+        }
+        ctx.fillText(word, wordCenterX, lineY);
       } else if (settings.preset === 'hormozi') {
-        // High-energy Hormozi bold typography
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-        ctx.lineWidth = Math.max(3, Math.round(baseSizePx * 0.12));
-        ctx.lineJoin = 'round';
-        ctx.strokeText(word, wordCenterX, lineY);
-
         if (isHighlighted) {
           ctx.fillStyle = highlightColor;
           ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -168,21 +258,12 @@ export function renderCaptionToCanvas(
         }
         ctx.fillText(word, wordCenterX, lineY);
       } else if (settings.preset === 'neon') {
-        // Futuristic Cyber Neon
-        ctx.strokeStyle = '#2e1065';
-        ctx.lineWidth = Math.max(3, Math.round(baseSizePx * 0.1));
-        ctx.strokeText(word, wordCenterX, lineY);
-
         ctx.shadowColor = isHighlighted ? highlightColor : '#c084fc';
-        ctx.shadowBlur = isHighlighted ? 16 : 8;
+        ctx.shadowBlur = isHighlighted ? 18 : 8;
         ctx.fillStyle = isHighlighted ? highlightColor : '#f3e8ff';
         ctx.fillText(word, wordCenterX, lineY);
       } else {
         // Cinematic / Minimalist Clean
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
-        ctx.lineWidth = Math.max(2, Math.round(baseSizePx * 0.08));
-        ctx.strokeText(word, wordCenterX, lineY);
-
         ctx.fillStyle = isHighlighted ? highlightColor : textColor;
         ctx.fillText(word, wordCenterX, lineY);
       }
@@ -195,6 +276,45 @@ export function renderCaptionToCanvas(
   ctx.restore();
 }
 
+function getOutlineStrokeWidth(widthSetting?: string, baseSizePx: number = 32): number {
+  if (widthSetting === 'none') return 0;
+  if (widthSetting === 'thin') return Math.max(1, Math.round(baseSizePx * 0.06));
+  if (widthSetting === 'thick') return Math.max(5, Math.round(baseSizePx * 0.22));
+  return Math.max(3, Math.round(baseSizePx * 0.12));
+}
+
+function drawSpeakerBadge(
+  ctx: CanvasRenderingContext2D,
+  speaker: string,
+  centerX: number,
+  centerY: number,
+  baseSizePx: number
+): void {
+  ctx.save();
+  const badgeFont = Math.max(12, Math.round(baseSizePx * 0.52));
+  ctx.font = `800 ${badgeFont}px "Montserrat", "Inter", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const text = speaker.toUpperCase();
+  const textW = ctx.measureText(text).width;
+  const padX = badgeFont * 0.7;
+  const padY = badgeFont * 0.25;
+  const boxW = textW + padX * 2;
+  const boxH = badgeFont * 1.5;
+
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  drawRoundedRect(ctx, centerX - boxW / 2, centerY - boxH / 2, boxW, boxH, boxH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText(text, centerX, centerY);
+  ctx.restore();
+}
+
 /**
  * Draws backdrop pill/container according to preset.
  */
@@ -204,7 +324,9 @@ function drawPresetBackdrop(
   lineWidth: number,
   fontSize: number,
   centerX: number,
-  centerY: number
+  centerY: number,
+  customBgColor?: string,
+  customBgOpacity?: number
 ): void {
   const padX = fontSize * 0.55;
   const padY = fontSize * 0.28;
@@ -216,7 +338,26 @@ function drawPresetBackdrop(
 
   ctx.save();
 
-  if (preset === 'hormozi') {
+  if (customBgColor) {
+    const opacity = customBgOpacity ?? 0.8;
+    ctx.fillStyle = customBgColor.startsWith('#')
+      ? `${customBgColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`
+      : customBgColor;
+    drawRoundedRect(ctx, x, y, boxW, boxH, radius);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  if (preset === 'boxed') {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.50)';
+    drawRoundedRect(ctx, x, y, boxW, boxH, radius);
+    ctx.fill();
+  } else if (preset === 'bounce') {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.70)';
+    drawRoundedRect(ctx, x, y, boxW, boxH, radius);
+    ctx.fill();
+  } else if (preset === 'hormozi') {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
     ctx.lineWidth = 1.5;
@@ -349,7 +490,10 @@ export function generateAssSubtitleFile(
   // Alignment: 2 = Bottom-Center, 5 = Middle-Center, 8 = Top-Center
   let alignment = 2;
   let marginV = Math.round(videoHeight * 0.12);
-  if (settings.position === 'top') {
+  if (settings.yOffset !== undefined && settings.yOffset >= 5 && settings.yOffset <= 95) {
+    alignment = 2;
+    marginV = Math.round(videoHeight * Math.max(0.04, (100 - settings.yOffset) / 100));
+  } else if (settings.position === 'top') {
     alignment = 8;
     marginV = Math.round(videoHeight * 0.08);
   } else if (settings.position === 'middle') {
@@ -357,11 +501,36 @@ export function generateAssSubtitleFile(
     marginV = 0;
   }
 
+  // Outline and Shadow parameters
+  let outlinePx = 3;
+  let shadowPx = 2;
+  if (settings.outlineWidth === 'none') {
+    outlinePx = 0;
+    shadowPx = 0;
+  } else if (settings.outlineWidth === 'thin') {
+    outlinePx = 1.5;
+    shadowPx = 1;
+  } else if (settings.outlineWidth === 'thick') {
+    outlinePx = 5;
+    shadowPx = 3;
+  }
+
+  const fontFamily = settings.fontFamily || 'Arial Black';
   const primaryColor = hexToAssColor(settings.textColor || '#FFFFFF');
   const highlightColor = hexToAssColor(settings.highlightColor || '#FACC15');
-  const outlineColor = '&H00000000&';
-  const backColor = '&H80000000&';
+  const outlineColor = hexToAssColor(settings.outlineColor || '#000000');
+
+  // Background box opacity (alpha in ASS: 00 = opaque, FF = fully transparent)
+  const bgOpacity = settings.backgroundOpacity ?? 0.8;
+  const bgAlphaHex = Math.max(0, Math.min(255, Math.round((1 - bgOpacity) * 255))).toString(16).padStart(2, '0');
+  const backColor = hexToAssColor(settings.backgroundColor || '#000000', bgAlphaHex);
+
   const fontSize = Math.round((videoHeight / 1280) * (settings.fontSize === 'xl' ? 48 : settings.fontSize === 'lg' ? 40 : 34));
+
+  // In karaoke word-highlight mode, Primary is highlighted color, Secondary is base color
+  const isKaraokeMode = settings.displayMode === 'word-highlight' || settings.displayMode === 'boxed-word' || settings.displayMode === 'karaoke' || settings.preset === 'karaoke';
+  const assPrimary = isKaraokeMode ? highlightColor : primaryColor;
+  const assSecondary = isKaraokeMode ? primaryColor : highlightColor;
 
   let ass = `[Script Info]
 Title: Hardcoded Subtitles
@@ -373,7 +542,7 @@ PlayResY: ${videoHeight}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial Black,${fontSize},${primaryColor},${primaryColor},${outlineColor},${backColor},-1,0,0,0,100,100,1,0,1,3,2,${alignment},40,40,${marginV},1
+Style: Default,${fontFamily},${fontSize},${assPrimary},${assSecondary},${outlineColor},${backColor},-1,0,0,0,100,100,1,0,1,${outlinePx},${shadowPx},${alignment},40,40,${marginV},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -384,8 +553,24 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     const endStr = formatAssTime(s.end);
     let text = s.text.replace(/\r?\n/g, '\\N');
 
-    // Highlight keywords with ASS color override tag
-    if (s.highlightWords && s.highlightWords.length > 0) {
+    // Prepend Speaker Label tag if configured
+    if (settings.speakerLabels && s.speaker) {
+      text = `{\\b1\\c&H00D7FF&}[${s.speaker}]:{\\r} ` + text;
+    }
+
+    if (isKaraokeMode && s.words && s.words.length > 0) {
+      // Generate ASS karaoke tags for synchronized kinetic word fill
+      text = s.words
+        .map((w) => {
+          const cs = Math.max(1, Math.round((w.end - w.start) * 100));
+          return `{\\k${cs}}${w.word}`;
+        })
+        .join(' ');
+      if (settings.speakerLabels && s.speaker) {
+        text = `{\\b1\\c&H00D7FF&}[${s.speaker}]:{\\r} ` + text;
+      }
+    } else if (s.highlightWords && s.highlightWords.length > 0) {
+      // Highlight keywords with ASS color override tag
       for (const hw of s.highlightWords) {
         const regex = new RegExp(`\\b(${hw})\\b`, 'gi');
         text = text.replace(regex, `{\\c${highlightColor}}$1{\\c${primaryColor}}`);

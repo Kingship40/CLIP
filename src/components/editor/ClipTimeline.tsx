@@ -98,20 +98,20 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
   return (
     <div className="bg-dark-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 select-none">
       {/* Header Info: Start / End / Duration Readouts & Steppers */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-800/80 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-[var(--border)] dark:border-slate-800/80 pb-3">
         <div className="flex items-center gap-2">
-          <Scissors className="w-4 h-4 text-brand-400" />
-          <span className="font-semibold text-white">Clip Range Trimming:</span>
-          <span className="font-mono bg-dark-950 px-2 py-0.5 rounded text-brand-300 border border-brand-500/30">
+          <Scissors className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+          <span className="font-bold text-[var(--text-primary)]">Clip Range Trimming:</span>
+          <span className="font-mono bg-[var(--bg-surface-2)] dark:bg-dark-950 px-2 py-0.5 rounded text-brand-600 dark:text-brand-300 border border-[var(--border)] dark:border-brand-500/30">
             {formatDurationPrecise(startTime)} → {formatDurationPrecise(endTime)}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-slate-300">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="flex items-center gap-1.5 text-[var(--text-secondary)]">
+            <Clock className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
             <span>Clip Duration:</span>
-            <strong className="text-white font-mono bg-dark-950 px-2 py-0.5 rounded border border-slate-800">
+            <strong className="text-[var(--text-primary)] font-mono bg-[var(--bg-surface-2)] dark:bg-dark-950 px-2 py-0.5 rounded border border-[var(--border)] dark:border-slate-800">
               {formatDurationPrecise(clipDuration)} ({clipDuration.toFixed(1)}s)
             </strong>
           </div>
@@ -119,7 +119,7 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
           {onResetRange && (
             <button
               onClick={onResetRange}
-              className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
               title="Reset to original highlight duration"
             >
               <RotateCcw className="w-3 h-3" />
@@ -132,7 +132,7 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
       {/* Main Interactive Timeline Track */}
       <div className="relative pt-6 pb-2">
         {/* Ruler Ticks */}
-        <div className="absolute top-0 inset-x-0 h-4 flex justify-between text-[10px] text-slate-500 font-mono pointer-events-none">
+        <div className="absolute top-0 inset-x-0 h-4 flex justify-between text-[10px] text-[var(--text-muted)] font-mono pointer-events-none">
           {ticks.map((t, idx) => (
             <span
               key={idx}
@@ -148,7 +148,7 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
         <div
           ref={trackRef}
           onClick={handleTrackClick}
-          className="relative h-10 bg-dark-950 rounded-xl border border-slate-800 cursor-pointer overflow-hidden shadow-inner group"
+          className="relative h-10 bg-[var(--bg-surface-2)] dark:bg-dark-950 rounded-xl border border-[var(--border)] dark:border-slate-800 cursor-pointer overflow-hidden shadow-inner group"
         >
           {/* Audio Waveform Simulation Background */}
           <div className="absolute inset-0 flex items-center justify-around opacity-20 pointer-events-none px-2">
@@ -220,38 +220,38 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
       {/* Accessible Stepper & Micro Adjustment Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
         {/* Start Time Stepper */}
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-xs">
-          <span className="font-semibold text-slate-400 uppercase tracking-wider text-[11px]">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 text-xs">
+          <span className="font-bold text-[var(--text-secondary)] uppercase tracking-wider text-[11px]">
             Start Cut:
           </span>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => onRangeChange(Math.max(0, startTime - 1), endTime)}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="-1 second"
             >
               -1s
             </button>
             <button
               onClick={() => onRangeChange(Math.max(0, startTime - 0.2), endTime)}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="-0.2 seconds"
             >
               -0.2s
             </button>
-            <span className="font-mono text-sm font-bold text-white px-2">
+            <span className="font-mono text-sm font-bold text-[var(--text-primary)] px-2">
               {formatDurationPrecise(startTime)}
             </span>
             <button
               onClick={() => onRangeChange(Math.min(endTime - 2, startTime + 0.2), endTime)}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="+0.2 seconds"
             >
               +0.2s
             </button>
             <button
               onClick={() => onRangeChange(Math.min(endTime - 2, startTime + 1), endTime)}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="+1 second"
             >
               +1s
@@ -260,38 +260,38 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
         </div>
 
         {/* End Time Stepper */}
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-dark-950 border border-slate-800 text-xs">
-          <span className="font-semibold text-slate-400 uppercase tracking-wider text-[11px]">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 text-xs">
+          <span className="font-bold text-[var(--text-secondary)] uppercase tracking-wider text-[11px]">
             End Cut:
           </span>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => onRangeChange(startTime, Math.max(startTime + 2, endTime - 1))}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="-1 second"
             >
               -1s
             </button>
             <button
               onClick={() => onRangeChange(startTime, Math.max(startTime + 2, endTime - 0.2))}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="-0.2 seconds"
             >
               -0.2s
             </button>
-            <span className="font-mono text-sm font-bold text-white px-2">
+            <span className="font-mono text-sm font-bold text-[var(--text-primary)] px-2">
               {formatDurationPrecise(endTime)}
             </span>
             <button
               onClick={() => onRangeChange(startTime, Math.min(durationSafe, endTime + 0.2))}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="+0.2 seconds"
             >
               +0.2s
             </button>
             <button
               onClick={() => onRangeChange(startTime, Math.min(durationSafe, endTime + 1))}
-              className="p-1 rounded bg-dark-850 hover:bg-dark-800 text-slate-300 hover:text-white border border-slate-700/60"
+              className="p-1 rounded bg-[var(--bg-elevated)] hover:bg-slate-100 dark:bg-dark-850 dark:hover:bg-dark-800 text-[var(--text-primary)] border border-[var(--border)] dark:border-slate-700/60 font-semibold"
               title="+1 second"
             >
               +1s

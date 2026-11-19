@@ -48,7 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-dark-950/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 backdrop-blur-sm z-40 lg:hidden"
+          style={{ background: 'var(--bg-page)', opacity: 0.8 }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -56,13 +57,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       {/* Sidebar Container */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-dark-900 border-r border-slate-800 transition-all duration-300 ease-in-out',
+          'fixed top-0 bottom-0 left-0 z-40 flex flex-col border-r transition-all duration-300 ease-in-out',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           isCollapsed ? 'w-20' : 'w-64'
         )}
+        style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
       >
         {/* Logo and Collapse Toggle */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
           <NavLink
             to="/dashboard"
             onClick={() => setMobileOpen(false)}
@@ -73,17 +75,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="font-bold text-white text-base tracking-tight leading-tight flex items-center gap-1.5">
-                  ClipForge <span className="text-brand-400 font-extrabold text-xs uppercase px-1.5 py-0.5 rounded bg-brand-500/15 border border-brand-500/30">AI</span>
+                <span className="font-extrabold text-base tracking-tight leading-tight flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                  ClipForge <span className="text-[#5145DE] dark:text-brand-300 font-extrabold text-xs uppercase px-1.5 py-0.5 rounded bg-brand-500/15 border border-brand-500/30">AI</span>
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Smart Video Repurposing</span>
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)] dark:text-slate-400">Smart Video Repurposing</span>
               </div>
             )}
           </NavLink>
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800 transition-colors"
+            className="hidden lg:flex p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -103,10 +105,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors group relative',
+                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all group relative',
                       isActive
-                        ? 'bg-brand-500/15 text-brand-300 border border-brand-500/25'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-dark-800/60'
+                        ? 'bg-[#EAE8FF] text-[#5145DE] font-semibold border border-brand-200/80 shadow-sm dark:bg-brand-500/15 dark:text-brand-300 dark:border-brand-500/30'
+                        : 'text-[#374151] dark:text-slate-300 font-semibold hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
                     )
                   }
                   title={isCollapsed ? item.name : undefined}
@@ -116,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                     <span className="flex-1 truncate">{item.name}</span>
                   )}
                   {!isCollapsed && item.badge && (
-                    <span className="text-[10px] font-semibold bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded border border-brand-500/30">
+                    <span className="text-[10px] font-bold bg-[#EAE8FF] text-[#5145DE] border border-brand-200 dark:bg-brand-500/20 dark:text-brand-300 dark:border-brand-500/30 px-1.5 py-0.5 rounded">
                       {item.badge}
                     </span>
                   )}
@@ -128,12 +130,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
           {/* Recent Projects Quick List */}
           {!isCollapsed && recentProjects.length > 0 && (
             <div className="pt-2">
-              <div className="px-3 mb-2 flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] dark:text-slate-400">
                 <span>Recent Projects</span>
                 <NavLink
                   to="/dashboard/projects"
                   onClick={() => setMobileOpen(false)}
-                  className="text-[11px] text-brand-400 hover:underline normal-case tracking-normal"
+                  className="text-[11px] text-[#5145DE] dark:text-brand-400 font-bold hover:underline normal-case tracking-normal"
                 >
                   View all
                 </NavLink>
@@ -147,16 +149,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors truncate',
+                        'flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors truncate',
                         isActive
-                          ? 'bg-brand-500/15 text-brand-300'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-dark-800/40'
+                          ? 'bg-[#EAE8FF] text-[#5145DE] font-bold dark:bg-brand-500/15 dark:text-brand-300'
+                          : 'text-[#374151] dark:text-slate-300 font-medium hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-2)]'
                       )
                     }
                   >
-                    <Video className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+                    <Video className="w-3.5 h-3.5 shrink-0 text-[#5145DE] dark:text-slate-400" />
                     <span className="truncate">{p.name}</span>
-                    <span className="text-[10px] text-slate-500 shrink-0 ml-auto">
+                    <span className="text-[10px] font-semibold shrink-0 ml-auto text-[var(--text-secondary)] dark:text-slate-400">
                       {p.clips.length} clips
                     </span>
                   </NavLink>
@@ -167,18 +169,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
           {/* Quick Create Highlight Box */}
           {!isCollapsed && (
-            <div className="p-3.5 rounded-xl bg-gradient-to-b from-brand-950/60 to-dark-850 border border-brand-500/20 text-xs">
-              <div className="flex items-center gap-2 text-brand-300 font-semibold mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-brand-400" />
+            <div className="p-3.5 rounded-xl border text-xs shadow-sm" style={{ background: 'var(--bg-surface-2)', borderColor: 'var(--border)' }}>
+              <div className="flex items-center gap-2 text-[#5145DE] dark:text-brand-300 font-bold mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#5145DE] dark:text-brand-400" />
                 <span>Quick Clip</span>
               </div>
-              <p className="text-slate-400 text-[11px] mb-3 leading-relaxed">
+              <p className="text-[11px] mb-3 leading-relaxed font-medium text-[var(--text-secondary)] dark:text-slate-400">
                 Transform webinars or interviews into viral vertical clips in seconds.
               </p>
               <NavLink
                 to="/dashboard/new"
                 onClick={() => setMobileOpen(false)}
-                className="block text-center w-full py-1.5 px-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-xs shadow transition-colors"
+                className="block text-center w-full py-1.5 px-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition-colors"
               >
                 Upload Video
               </NavLink>
@@ -187,12 +189,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
         </div>
 
         {/* User profile / Footer */}
-        <div className="p-3 border-t border-slate-800 shrink-0">
+        <div className="p-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div
             className={cn(
-              'flex items-center gap-3 p-2 rounded-xl bg-dark-850/60 border border-slate-800/80',
+              'flex items-center gap-3 p-2 rounded-xl border shadow-sm',
               isCollapsed && 'justify-center p-1.5'
             )}
+            style={{ background: 'var(--bg-surface-2)', borderColor: 'var(--border)' }}
           >
             <img
               src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
@@ -202,18 +205,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-semibold text-white truncate">{user?.name || 'Creator'}</p>
-                  <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1 py-0.2 rounded uppercase">
+                  <p className="text-xs font-bold truncate text-[var(--text-primary)] dark:text-white">{user?.name || 'Creator'}</p>
+                  <span className="text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-400/15 dark:text-amber-400 dark:border-amber-400/30 px-1 py-0.2 rounded uppercase">
                     {user?.plan || 'PRO'}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 truncate">{user?.email || 'user@example.com'}</p>
+                <p className="text-[11px] font-medium truncate text-[var(--text-secondary)] dark:text-slate-400">{user?.email || 'user@example.com'}</p>
               </div>
             )}
             {!isCollapsed && (
               <button
                 onClick={handleLogout}
-                className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                className="p-1 rounded-md text-[var(--text-secondary)] hover:text-rose-600 hover:bg-rose-50 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors"
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />

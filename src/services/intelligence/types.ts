@@ -2,7 +2,7 @@
  * Types and interfaces for the Expert-Level Viral Moment Intelligence Engine.
  */
 
-import { SubtitleSegment } from '../../types';
+import { SubtitleSegment, ContentType, ClipPreference } from '../../types';
 
 export type ViralClipCategory =
   | 'hook_intro'               // Attention-grabbing opening with high retention
@@ -57,13 +57,18 @@ export interface CandidateMoment {
 }
 
 export interface ViralIntelligenceConfig {
-  minDuration: number;           // Minimum clip duration in seconds (default: 12)
+  minDuration: number;           // Minimum clip duration in seconds (default: 15)
   maxDuration: number;           // Maximum clip duration in seconds (default: 60)
   targetDuration?: number;       // Ideal duration in seconds (e.g. 30)
+  exactDuration?: number;        // Strict exact duration target in seconds
+  durationMode?: 'range' | 'exact';
+  toleranceSeconds?: number;
   clipCount: number;             // Desired number of clips
   diversityFactor: number;       // 0.0 (pure highest score) to 1.0 (maximum category diversity)
   maxOverlapSeconds: number;     // Maximum allowable temporal overlap between clips (default: 3.0)
   weights?: Partial<ViralScoreBreakdown>;
+  contentType?: ContentType;     // Content type (podcast, interview, educational, tutorial, vlog, presentation, other)
+  preferences?: ClipPreference[]; // User clip focus preferences
 }
 
 export const DEFAULT_VIRAL_WEIGHTS: Record<keyof ViralScoreBreakdown, number> = {

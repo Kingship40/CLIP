@@ -23,19 +23,19 @@ export const HeroSection: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Main Headline & Supporting Text */}
         <div className="text-center max-w-3xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/25 text-brand-300 text-xs font-semibold uppercase tracking-wider animate-in fade-in duration-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/25 text-brand-600 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider animate-in fade-in duration-300">
             <Sparkles className="w-3.5 h-3.5" />
             <span>AI Video Clipping Platform</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.1]" style={{ color: 'var(--text-primary)' }}>
             Turn Long Videos Into{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-cyan-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-indigo-500 to-cyan-500">
               Scroll-Stopping Shorts.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
             Transform podcasts, interviews, tutorials, and long-form videos into ready-to-share short clips with an AI-powered clipping workflow.
           </p>
 

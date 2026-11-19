@@ -77,31 +77,31 @@ export const ProjectWorkspacePage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Top Header & Breadcrumbs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard/projects"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-900 transition-colors"
+            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
                 {project.name}
               </h1>
-              <Badge variant="emerald" size="sm">
+              <Badge variant="emerald" size="sm" className="font-bold">
                 Completed
               </Badge>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Source: {project.sourceVideo.name} • Created {formatRelativeTime(project.createdAt)}
+            <p className="text-xs mt-1 font-medium text-[var(--text-secondary)]">
+              Source: <strong className="font-bold text-[var(--text-primary)]">{project.sourceVideo.name}</strong> • Created <span className="font-semibold text-[var(--text-primary)]">{formatRelativeTime(project.createdAt)}</span>
             </p>
           </div>
         </div>
 
         {/* Project Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="secondary"
             size="sm"
@@ -109,7 +109,7 @@ export const ProjectWorkspacePage: React.FC = () => {
               setRenameValue(project.name);
               setIsRenameOpen(true);
             }}
-            leftIcon={<Edit3 className="w-3.5 h-3.5 text-slate-400" />}
+            leftIcon={<Edit3 className="w-3.5 h-3.5" />}
           >
             Rename
           </Button>
@@ -118,7 +118,7 @@ export const ProjectWorkspacePage: React.FC = () => {
             variant="secondary"
             size="sm"
             onClick={handleDuplicate}
-            leftIcon={<Copy className="w-3.5 h-3.5 text-slate-400" />}
+            leftIcon={<Copy className="w-3.5 h-3.5" />}
           >
             Duplicate
           </Button>
@@ -136,15 +136,21 @@ export const ProjectWorkspacePage: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={() => setIsDeleteOpen(true)}
-            leftIcon={<Trash2 className="w-3.5 h-3.5 text-rose-400" />}
+            leftIcon={<Trash2 className="w-3.5 h-3.5 text-rose-500" />}
           />
         </div>
       </div>
 
       {/* Source Video Overview Banner */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-dark-900 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div
+        className="p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+        }}
+      >
         <div className="flex items-center gap-4">
-          <div className="relative w-28 sm:w-36 aspect-video rounded-xl bg-dark-950 overflow-hidden shrink-0 shadow border border-slate-800">
+          <div className="relative w-28 sm:w-36 aspect-video rounded-xl bg-black overflow-hidden shrink-0 shadow-sm border" style={{ borderColor: 'var(--border)' }}>
             <img
               src={project.sourceVideo.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=600&auto=format&fit=crop&q=80'}
               alt={project.name}
@@ -156,25 +162,26 @@ export const ProjectWorkspacePage: React.FC = () => {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-white">Source Master Summary</h3>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <ShieldCheck className="w-3 h-3" />
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h3 className="text-sm font-bold tracking-tight text-[var(--text-primary)]">Source Master Summary</h3>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 shadow-sm">
+                <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>Processed Privately • Source Not Exposed</span>
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-              <span>Duration: <strong className="text-slate-200">{formatDuration(project.sourceVideo.duration)}</strong></span>
-              <span>Aspect: <strong className="text-slate-200">{project.config.aspectRatio}</strong></span>
-              <span>Content: <strong className="text-slate-200 capitalize">{project.config.contentType}</strong></span>
-              <span>Target Duration: <strong className="text-slate-200">{project.config.targetDuration}s</strong></span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-[var(--text-secondary)]">
+              <span>Duration: <strong className="font-bold text-[var(--text-primary)]">{formatDuration(project.sourceVideo.duration)}</strong></span>
+              <span>Aspect: <strong className="font-bold text-[var(--text-primary)]">{project.config.aspectRatio}</strong></span>
+              <span>Content: <strong className="capitalize font-bold text-[var(--text-primary)]">{project.config.contentType}</strong></span>
+              <span>Target Duration: <strong className="font-bold text-[var(--text-primary)]">{project.config.targetDuration}s</strong></span>
+              <span>Clips: <strong className="text-[#5145DE] dark:text-brand-400 font-extrabold">{project.clips.length}</strong> of <strong className="font-bold text-[var(--text-primary)]">{project.config.clipCount === 'custom' ? project.config.customClipCount : project.config.clipCount} requested</strong></span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-center">
           <Link to="/dashboard/new">
-            <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-brand-400" />}>
+            <Button variant="secondary" size="sm" leftIcon={<Sparkles className="w-3.5 h-3.5 text-brand-500" />}>
               Clip Another Video
             </Button>
           </Link>
@@ -185,11 +192,11 @@ export const ProjectWorkspacePage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
+            <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <Sparkles className="w-5 h-5 text-amber-500" />
               <span>Generated Short Clips</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               Click "Edit Clip" on any card to trim timestamps, customize captions, or fine-tune keywords.
             </p>
           </div>

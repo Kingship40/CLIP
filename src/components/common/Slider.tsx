@@ -12,17 +12,18 @@ export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
       <div className="w-full">
         {(label || valueDisplay) && (
           <div className="flex items-center justify-between text-xs font-medium mb-1.5">
-            {label && <span className="uppercase tracking-wider text-slate-400">{label}</span>}
-            {valueDisplay && <span className="text-slate-300 font-mono">{valueDisplay}</span>}
+            {label && <span className="uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{label}</span>}
+            {valueDisplay && <span className="font-mono" style={{ color: 'var(--text-primary)' }}>{valueDisplay}</span>}
           </div>
         )}
         <input
           type="range"
           ref={ref}
           className={cn(
-            'w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-dark-800 transition-all focus:outline-none focus:ring-1 focus:ring-brand-500',
+            'w-full h-1.5 rounded-lg appearance-none cursor-pointer transition-all focus:outline-none focus:ring-1 focus:ring-brand-500',
             className
           )}
+          style={{ backgroundColor: 'var(--border)' }}
           {...props}
         />
       </div>

@@ -23,8 +23,14 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
   return (
     <div className="max-w-3xl mx-auto py-6 sm:py-10 space-y-8 animate-in fade-in duration-300">
       {/* Video Summary Card */}
-      <div className="bg-dark-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4">
-        <div className="relative w-full sm:w-36 aspect-video rounded-xl overflow-hidden bg-dark-950 border border-slate-800 shrink-0">
+      <div
+        className="border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 shadow-sm"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+        }}
+      >
+        <div className="relative w-full sm:w-36 aspect-video rounded-xl overflow-hidden bg-black border shrink-0" style={{ borderColor: 'var(--border)' }}>
           {project.sourceVideo.thumbnailUrl ? (
             <img
               src={project.sourceVideo.thumbnailUrl}
@@ -32,7 +38,7 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-600">
+            <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--text-muted)' }}>
               <Film className="w-8 h-8" />
             </div>
           )}
@@ -46,13 +52,13 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
             <Badge variant="brand" size="sm">
               Processing Job
             </Badge>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
               Target: {project.config.clipCount === 'custom' ? project.config.customClipCount : project.config.clipCount} Clips ({project.config.aspectRatio})
             </span>
           </div>
 
-          <h2 className="text-lg font-bold text-white truncate">{project.name}</h2>
-          <p className="text-xs text-slate-400 mt-1 line-clamp-1">
+          <h2 className="text-lg font-bold truncate" style={{ color: 'var(--text-primary)' }}>{project.name}</h2>
+          <p className="text-xs mt-1 line-clamp-1" style={{ color: 'var(--text-muted)' }}>
             Source: {project.sourceVideo.name} • {project.config.contentType} • {project.config.targetDuration}s
           </p>
         </div>
@@ -62,7 +68,7 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            leftIcon={<XCircle className="w-4 h-4 text-rose-400" />}
+            leftIcon={<XCircle className="w-4 h-4 text-rose-500" />}
           >
             Cancel Pipeline
           </Button>
@@ -70,42 +76,54 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
       </div>
 
       {/* Main Progress Ring & Bar */}
-      <div className="bg-dark-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden">
+      <div
+        className="border rounded-2xl p-6 sm:p-8 space-y-6 relative overflow-hidden shadow-sm"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border)',
+        }}
+      >
         {/* Subtle background glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-brand-400 animate-ping" />
-              <h3 className="text-base sm:text-lg font-bold text-white">
+              <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
+              <h3 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                 {currentStage?.title || 'Processing Video'}
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-md">
+            <p className="text-xs sm:text-sm max-w-md" style={{ color: 'var(--text-secondary)' }}>
               {currentStage?.description || 'Evaluating video segments and generating clips...'}
             </p>
           </div>
 
           <div className="text-right">
-            <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-indigo-300 font-mono">
+            <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-indigo-500 font-mono">
               {job.progress}%
             </span>
-            <p className="text-[11px] text-slate-400">Overall Pipeline</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Overall Pipeline</p>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-dark-950 rounded-full h-3 p-0.5 border border-slate-800 overflow-hidden">
+        <div
+          className="w-full rounded-full h-3 p-0.5 border overflow-hidden"
+          style={{
+            backgroundColor: 'var(--bg-elevated)',
+            borderColor: 'var(--border)',
+          }}
+        >
           <div
-            className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-cyan-400 rounded-full transition-all duration-300 ease-out shadow-glow-brand"
+            className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-cyan-500 rounded-full transition-all duration-300 ease-out shadow-glow-brand"
             style={{ width: `${Math.max(4, job.progress)}%` }}
           />
         </div>
 
         {/* Multi-stage Stepper */}
         <div className="space-y-3 pt-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
             Pipeline Stages (6 of 6)
           </h4>
 
@@ -121,20 +139,23 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
                   key={stage.id}
                   className={`p-3 rounded-xl border flex items-start gap-3 transition-all ${
                     isInProgress
-                      ? 'bg-brand-500/10 border-brand-500/40 text-white'
+                      ? 'bg-brand-500/10 border-brand-500/40 text-[var(--text-primary)]'
                       : isCompleted
-                      ? 'bg-dark-950/50 border-emerald-500/20 text-slate-300'
+                      ? 'border-emerald-500/20 text-[var(--text-primary)]'
                       : isFailed
-                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                      : 'bg-dark-950/20 border-slate-800/80 text-slate-500'
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                      : 'border-[var(--border)]'
                   }`}
+                  style={{
+                    backgroundColor: isInProgress || isFailed ? undefined : 'var(--bg-elevated)',
+                  }}
                 >
                   <div className="shrink-0 mt-0.5">
-                    {isInProgress && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
-                    {isCompleted && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-                    {isFailed && <AlertCircle className="w-4 h-4 text-rose-400" />}
+                    {isInProgress && <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />}
+                    {isCompleted && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                    {isFailed && <AlertCircle className="w-4 h-4 text-rose-500" />}
                     {isPending && (
-                      <span className="w-4 h-4 rounded-full border border-slate-700 text-[10px] flex items-center justify-center font-mono">
+                      <span className="w-4 h-4 rounded-full border text-[10px] flex items-center justify-center font-mono" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
                         {idx + 1}
                       </span>
                     )}
@@ -143,12 +164,13 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
                   <div className="min-w-0 text-xs">
                     <span
                       className={`font-semibold block ${
-                        isInProgress ? 'text-brand-300' : isCompleted ? 'text-slate-200' : ''
+                        isInProgress ? 'text-brand-600 dark:text-brand-300' : isCompleted ? 'text-emerald-700 dark:text-emerald-400' : ''
                       }`}
+                      style={{ color: !isInProgress && !isCompleted ? 'var(--text-muted)' : undefined }}
                     >
                       {stage.title}
                     </span>
-                    <span className="text-[11px] text-slate-400 line-clamp-1">
+                    <span className="text-[11px] line-clamp-1" style={{ color: 'var(--text-muted)' }}>
                       {stage.description}
                     </span>
                   </div>
@@ -159,10 +181,17 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({
         </div>
 
         {/* Demo Notice Banner */}
-        <div className="p-3.5 rounded-xl bg-dark-950 border border-brand-500/20 flex items-start gap-3 text-xs text-slate-400">
-          <Server className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+        <div
+          className="p-3.5 rounded-xl border flex items-start gap-3 text-xs"
+          style={{
+            backgroundColor: 'var(--bg-elevated)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <Server className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
           <div className="leading-relaxed">
-            <strong className="text-slate-200">Simulation Mode:</strong> Processing stages are simulated client-side for demonstration. When a production backend (FastAPI/FFmpeg) is connected, these steps communicate with asynchronous Celery/Redis workers.
+            <strong style={{ color: 'var(--text-primary)' }}>Simulation Mode:</strong> Processing stages are simulated client-side for demonstration. When a production backend (FastAPI/FFmpeg) is connected, these steps communicate with asynchronous Celery/Redis workers.
           </div>
         </div>
       </div>

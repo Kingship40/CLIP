@@ -15,7 +15,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          <label htmlFor={selectId} className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
             {label}
           </label>
         )}
@@ -24,24 +24,29 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={cn(
-              'w-full appearance-none bg-dark-900 border rounded-lg px-3.5 py-2 pr-9 text-sm text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/50 cursor-pointer',
+              'w-full appearance-none border rounded-lg px-3.5 py-2 pr-9 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/50 cursor-pointer',
               error
                 ? 'border-rose-500/80 focus:border-rose-500'
-                : 'border-slate-800 hover:border-slate-700 focus:border-brand-500',
+                : 'hover:border-slate-400 focus:border-brand-500',
               className
             )}
+            style={{
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: error ? undefined : 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
             {...props}
           >
             {children}
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-muted)' }}>
             <ChevronDown className="w-4 h-4" />
           </div>
         </div>
         {error ? (
-          <p className="mt-1 text-xs text-rose-400">{error}</p>
+          <p className="mt-1 text-xs text-rose-500">{error}</p>
         ) : helperText ? (
-          <p className="mt-1 text-xs text-slate-400">{helperText}</p>
+          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>{helperText}</p>
         ) : null}
       </div>
     );

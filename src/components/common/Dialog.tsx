@@ -39,8 +39,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {variant === 'danger' ? <AlertTriangle className="w-6 h-6" /> : <Info className="w-6 h-6" />}
         </div>
 
-        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">{message}</p>
+        <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">{title}</h3>
+        <p className="text-sm text-[var(--text-description)] mb-6 leading-relaxed">{message}</p>
 
         <div className="flex items-center justify-center gap-3 w-full">
           <Button

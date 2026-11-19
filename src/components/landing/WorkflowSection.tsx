@@ -30,16 +30,16 @@ export const WorkflowSection: React.FC = () => {
   ];
 
   return (
-    <section id="workflow" className="py-20 md:py-28 bg-dark-950 border-t border-slate-900 relative">
+    <section id="workflow" className="py-20 md:py-28 border-t relative" style={{ borderColor: 'var(--border)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
             Effortless Workflow
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mt-2 mb-4 tracking-tight" style={{ color: 'var(--text-primary)' }}>
             How It Works in 4 Simple Steps
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
             From a 60-minute podcast recording to 10 viral short-form clips in under 2 minutes.
           </p>
         </div>
@@ -48,18 +48,28 @@ export const WorkflowSection: React.FC = () => {
           {steps.map((step) => (
             <div
               key={step.num}
-              className="relative p-6 rounded-2xl bg-dark-900/60 border border-slate-800/80 hover:border-slate-700 transition-all hover:bg-dark-900 group"
+              className="relative p-6 rounded-2xl border transition-all hover:shadow-lg group"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border)',
+              }}
             >
-              <span className="text-3xl font-black text-slate-800 group-hover:text-brand-500/30 transition-colors font-mono">
+              <span className="text-3xl font-black text-slate-300 dark:text-slate-800 group-hover:text-brand-500/30 transition-colors font-mono">
                 {step.num}
               </span>
 
-              <div className="w-12 h-12 rounded-xl bg-dark-850 border border-slate-800 flex items-center justify-center my-4 group-hover:scale-105 transition-transform">
+              <div
+                className="w-12 h-12 rounded-xl border flex items-center justify-center my-4 group-hover:scale-105 transition-transform"
+                style={{
+                  backgroundColor: 'var(--bg-elevated)',
+                  borderColor: 'var(--border)',
+                }}
+              >
                 {step.icon}
               </div>
 
-              <h3 className="text-base font-bold text-white mb-2">{step.title}</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {step.description}
               </p>
             </div>

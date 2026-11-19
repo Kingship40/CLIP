@@ -105,19 +105,19 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
       description="Connect a real multimodal AI to watch your video frames and extract viral short clips."
       maxWidth="md"
     >
-      <div className="space-y-5 text-xs text-slate-300">
+      <div className="space-y-5 text-xs text-[var(--text-body)]">
         {/* Provider Switcher Tabs */}
-        <div className="grid grid-cols-3 gap-2 p-1 bg-dark-950 rounded-xl border border-slate-800">
+        <div className="grid grid-cols-3 gap-2 p-1 bg-[var(--bg-surface-2)] dark:bg-dark-950 rounded-xl border border-[var(--border)] dark:border-slate-800">
           <button
             type="button"
             onClick={() => {
               setProvider('gemini');
               setTestResult(null);
             }}
-            className={`p-2 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
+            className={`p-2.5 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
               provider === 'gemini'
-                ? 'bg-cyan-500 text-white shadow-glow-cyan'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-cyan-600 text-white shadow-md'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -131,10 +131,10 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
               setProvider('openai');
               setTestResult(null);
             }}
-            className={`p-2 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
+            className={`p-2.5 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
               provider === 'openai'
-                ? 'bg-emerald-500 text-white shadow'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
             }`}
           >
             <Bot className="w-4 h-4" />
@@ -148,10 +148,10 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
               setProvider('waveform');
               setTestResult(null);
             }}
-            className={`p-2 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
+            className={`p-2.5 rounded-lg font-bold transition-all flex flex-col items-center gap-1 ${
               provider === 'waveform'
-                ? 'bg-brand-500 text-white shadow'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-brand-600 text-white shadow-md'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
             }`}
           >
             <Cpu className="w-4 h-4" />
@@ -162,14 +162,14 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
         {/* Gemini Provider Section */}
         {provider === 'gemini' && (
-          <div className="space-y-3 p-4 rounded-xl bg-dark-950 border border-slate-800 animate-in fade-in">
+          <div className="space-y-3 p-4 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 animate-in fade-in">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                <h4 className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <span>Google Gemini Vision (Free API)</span>
                 </h4>
-                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                <p className="text-[11px] text-[var(--text-description)] mt-1 leading-relaxed">
                   Google Gemini 1.5 Flash natively watches video frames at 60fps speeds with microsecond audio transcription. Completely free at Google AI Studio.
                 </p>
               </div>
@@ -178,7 +178,7 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 px-2.5 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all font-semibold text-[11px] flex items-center gap-1"
+                className="shrink-0 px-2.5 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 transition-all font-semibold text-[11px] flex items-center gap-1"
               >
                 <span>Get Free Key</span>
                 <ExternalLink className="w-3 h-3" />
@@ -187,10 +187,10 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
             {/* API Key Input */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-[var(--text-secondary)] flex items-center justify-between">
                 <span>Gemini API Key:</span>
                 {geminiKey && (
-                  <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                     <CheckCircle2 className="w-3 h-3" /> Key saved
                   </span>
                 )}
@@ -205,12 +205,12 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
                     setTestResult(null);
                   }}
                   placeholder="AIzaSy..."
-                  className="w-full bg-dark-900 border border-slate-800 rounded-xl px-3 py-2.5 pr-10 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl px-3 py-2.5 pr-10 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-2.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -219,11 +219,11 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
             {/* Model Selector */}
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-400">Gemini Model:</label>
+              <label className="text-[11px] font-semibold text-[var(--text-secondary)]">Gemini Model:</label>
               <select
                 value={geminiModel}
                 onChange={(e) => setGeminiModel(e.target.value as any)}
-                className="w-full bg-dark-900 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none"
+                className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-colors"
               >
                 <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fastest, High Quota Free Tier)</option>
                 <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental (Next-Gen Video Vision)</option>
@@ -235,14 +235,14 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
         {/* OpenAI ChatGPT Section */}
         {provider === 'openai' && (
-          <div className="space-y-3 p-4 rounded-xl bg-dark-950 border border-slate-800 animate-in fade-in">
+          <div className="space-y-3 p-4 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 animate-in fade-in">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
-                  <Bot className="w-4 h-4 text-emerald-400" />
+                <h4 className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-1.5">
+                  <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>OpenAI ChatGPT Vision</span>
                 </h4>
-                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                <p className="text-[11px] text-[var(--text-description)] mt-1 leading-relaxed">
                   Uses GPT-4o / GPT-4o-mini with Vision to inspect sampled video frames and detect high-energy dopamine hooks.
                 </p>
               </div>
@@ -251,7 +251,7 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
                 href="https://platform.openai.com/api-keys"
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 px-2.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all font-semibold text-[11px] flex items-center gap-1"
+                className="shrink-0 px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30 transition-all font-semibold text-[11px] flex items-center gap-1"
               >
                 <span>OpenAI Keys</span>
                 <ExternalLink className="w-3 h-3" />
@@ -260,7 +260,7 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
             {/* API Key Input */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-slate-300">OpenAI API Key:</label>
+              <label className="text-[11px] font-semibold text-[var(--text-secondary)]">OpenAI API Key:</label>
               <div className="relative">
                 <input
                   type={showKey ? 'text' : 'password'}
@@ -270,12 +270,12 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
                     setTestResult(null);
                   }}
                   placeholder="sk-proj-..."
-                  className="w-full bg-dark-900 border border-slate-800 rounded-xl px-3 py-2.5 pr-10 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl px-3 py-2.5 pr-10 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-disabled)] focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-2.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -284,11 +284,11 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
             {/* Model Selector */}
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-400">OpenAI Model:</label>
+              <label className="text-[11px] font-semibold text-[var(--text-secondary)]">OpenAI Model:</label>
               <select
                 value={openaiModel}
                 onChange={(e) => setOpenaiModel(e.target.value as any)}
-                className="w-full bg-dark-900 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none"
+                className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
               >
                 <option value="gpt-4o-mini">GPT-4o Mini (Cost-Effective Vision)</option>
                 <option value="gpt-4o">GPT-4o (Full Flagship Multimodal)</option>
@@ -299,15 +299,15 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
 
         {/* Free Local Engine Section */}
         {provider === 'waveform' && (
-          <div className="p-4 rounded-xl bg-dark-950 border border-slate-800 space-y-2 animate-in fade-in">
-            <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
-              <Cpu className="w-4 h-4 text-brand-400" />
+          <div className="p-4 rounded-xl bg-[var(--bg-surface-2)] dark:bg-dark-950 border border-[var(--border)] dark:border-slate-800 space-y-2 animate-in fade-in">
+            <h4 className="font-bold text-[var(--text-primary)] text-sm flex items-center gap-1.5">
+              <Cpu className="w-4 h-4 text-brand-600 dark:text-brand-400" />
               <span>Client-Side Scene & Energy Engine</span>
             </h4>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-[var(--text-description)] leading-relaxed">
               No API keys required. Analyzes your video file directly inside your browser by sampling visual scene changes, calculating frame variance, and cutting clips at peak activity moments.
             </p>
-            <div className="flex items-center gap-2 pt-2 text-[10px] text-emerald-400 font-semibold">
+            <div className="flex items-center gap-2 pt-2 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
               <CheckCircle2 className="w-4 h-4" />
               <span>Ready to use instantly with 100% privacy (zero network calls).</span>
             </div>
@@ -319,8 +319,8 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
           <div
             className={`p-3 rounded-xl border flex items-start gap-2.5 ${
               testResult.success
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
+                : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300'
             }`}
           >
             {testResult.success ? (

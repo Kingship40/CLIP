@@ -45,16 +45,16 @@ export const FeatureCards: React.FC = () => {
   ];
 
   return (
-    <section id="features" className="py-20 md:py-28 bg-dark-900/40 relative">
+    <section id="features" className="py-20 md:py-28 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
             Engineered for Creators
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mt-2 mb-4 tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Everything You Need to Repurpose Video at Scale
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
             Turn every master recording into a compounding library of social clips.
           </p>
         </div>
@@ -63,13 +63,23 @@ export const FeatureCards: React.FC = () => {
           {features.map((feat, idx) => (
             <div
               key={idx}
-              className="p-6 rounded-2xl bg-dark-900 border border-slate-800 hover:border-slate-700 transition-all hover:shadow-lg"
+              className="p-6 rounded-2xl border transition-all hover:shadow-lg"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border)',
+              }}
             >
-              <div className="w-10 h-10 rounded-xl bg-dark-950 border border-slate-800 flex items-center justify-center mb-4">
+              <div
+                className="w-10 h-10 rounded-xl border flex items-center justify-center mb-4"
+                style={{
+                  backgroundColor: 'var(--bg-elevated)',
+                  borderColor: 'var(--border)',
+                }}
+              >
                 {feat.icon}
               </div>
-              <h3 className="text-base font-bold text-white mb-2">{feat.title}</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{feat.title}</h3>
+              <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {feat.description}
               </p>
             </div>

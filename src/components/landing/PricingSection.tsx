@@ -65,25 +65,33 @@ export const PricingSection: React.FC = () => {
   ];
 
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-dark-900/30 border-t border-slate-900">
+    <section id="pricing" className="py-20 md:py-28 border-t" style={{ borderColor: 'var(--border)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
             Simple & Transparent
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mt-2 mb-4 tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Plans for Creators at Every Stage
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base">
+          <p className="text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
             Start free without a credit card. Upgrade whenever you need higher upload capacities.
           </p>
 
           {/* Monthly / Annual Toggle */}
-          <div className="mt-6 inline-flex items-center p-1 bg-dark-950 border border-slate-800 rounded-xl text-xs font-semibold">
+          <div
+            className="mt-6 inline-flex items-center p-1 border rounded-xl text-xs font-semibold"
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              borderColor: 'var(--border)',
+            }}
+          >
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-4 py-1.5 rounded-lg transition-colors ${
-                billingCycle === 'monthly' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-white'
+                billingCycle === 'monthly'
+                  ? 'bg-brand-500 text-white'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               Monthly Billing
@@ -91,11 +99,13 @@ export const PricingSection: React.FC = () => {
             <button
               onClick={() => setBillingCycle('annual')}
               className={`px-4 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
-                billingCycle === 'annual' ? 'bg-brand-500 text-white' : 'text-slate-400 hover:text-white'
+                billingCycle === 'annual'
+                  ? 'bg-brand-500 text-white'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               <span>Annual Billing</span>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.2 rounded font-bold">
                 Save 20%
               </span>
             </button>
@@ -111,9 +121,13 @@ export const PricingSection: React.FC = () => {
                 key={i}
                 className={`rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all relative ${
                   plan.popular
-                    ? 'bg-gradient-to-b from-brand-950/70 to-dark-900 border-2 border-brand-500 shadow-glow-brand'
-                    : 'bg-dark-900 border border-slate-800'
+                    ? 'border-2 border-brand-500 shadow-glow-brand'
+                    : 'border'
                 }`}
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: plan.popular ? undefined : 'var(--border)',
+                }}
               >
                 {plan.popular && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow flex items-center gap-1">
@@ -123,22 +137,22 @@ export const PricingSection: React.FC = () => {
                 )}
 
                 <div>
-                  <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1 min-h-[32px]">{plan.description}</p>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{plan.name}</h3>
+                  <p className="text-xs mt-1 min-h-[32px]" style={{ color: 'var(--text-muted)' }}>{plan.description}</p>
 
                   <div className="my-6">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-white font-mono">
+                      <span className="text-4xl font-extrabold font-mono" style={{ color: 'var(--text-primary)' }}>
                         ${price}
                       </span>
-                      <span className="text-xs text-slate-400">/{plan.period}</span>
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>/{plan.period}</span>
                     </div>
                   </div>
 
-                  <ul className="space-y-3 text-xs text-slate-300 mb-8 border-t border-slate-800/80 pt-6">
+                  <ul className="space-y-3 text-xs mb-8 border-t pt-6" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
                     {plan.features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-start gap-2.5">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </li>
                     ))}
