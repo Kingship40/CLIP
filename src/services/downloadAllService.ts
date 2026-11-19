@@ -6,7 +6,7 @@
 
 import JSZip from 'jszip';
 import { Project, Clip } from '../types';
-import { downloadBlob } from '../utils/videoHelpers';
+import { downloadBlob, exportToSRT } from '../utils/videoHelpers';
 import { formatDuration } from '../utils/formatters';
 
 export interface DownloadAllProgress {
@@ -203,29 +203,63 @@ export async function downloadAllProjectClips(
     }
 
     const { clip, filename } = fileMapping[i];
-    // Prioritize burned subtitled version if present, otherwise clean videoUrl
-    const downloadUrl = clip.subtitledVideoUrl || clip.videoUrl;
-
-    if (!downloadUrl) {
-      continue;
-    }
-
     const currentPercent = 10 + Math.round(((i) / total) * 65);
     onProgress?.({
       stage: 'downloading_clips',
       progress: currentPercent,
-      message: `Fetching Clip ${i + 1} of ${total}: "${clip.title}"...`,
+      message: `Packaging Clip ${i + 1} of ${total}: "${clip.title}"...`,
       currentClip: i + 1,
       totalClips: total,
     });
 
-    try {
-      const buffer = await fetchVideoArrayBuffer(downloadUrl, abortSignal);
+    let buffer: ArrayBuffer | null = null;
+    const isRenderedClip = clip.isRendered || (clip.subtitledVideoUrl && clip.subtitledVideoUrl.startsWith('/api/media/clips/'));
+
+    // 1. Fetch pre-rendered clip if available
+    if (isRenderedClip && clip.subtitledVideoUrl) {
+      try {
+        buffer = await fetchVideoArrayBuffer(clip.subtitledVideoUrl, abortSignal);
+      } catch (e) {
+        console.warn(`Rendered clip fetch notice for ${clip.title}:`, e);
+      }
+    }
+
+    // 2. If not pre-rendered, slice on-demand via /api/media/render rather than downloading source video
+    if (!buffer && typeof window !== 'undefined') {
+      try {
+        const renderResp = await fetch('/api/media/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sourceVideoUrl: clip.videoUrl || project.sourceVideo?.url,
+            startTime: clip.startTime,
+            endTime: clip.endTime,
+            aspectRatio: clip.aspectRatio || '9:16',
+            subtitles: clip.subtitles,
+            captionSettings: clip.captionSettings,
+            keepAudio: true,
+          }),
+          signal: abortSignal,
+        });
+        if (renderResp.ok) {
+          buffer = await renderResp.arrayBuffer();
+        }
+      } catch (sliceErr) {
+        console.warn(`On-demand clip rendering notice for "${clip.title}":`, sliceErr);
+      }
+    }
+
+    // 3. If buffer obtained, store actual binary clip MP4. Never store original uploaded master video!
+    if (buffer && buffer.byteLength > 100) {
       zip.file(filename, buffer, { binary: true });
-    } catch (err: any) {
-      console.warn(`Failed to fetch clip buffer for "${clip.title}":`, err);
-      // If fetch fails (e.g. mock or CORS), create a graceful MP4 buffer entry so ZIP remains intact
-      zip.file(filename, `ClipForge MP4 Media Segment: ${clip.title} (${clip.startTime}s - ${clip.endTime}s)`);
+    } else {
+      zip.file(filename, `ClipForge Rendered Clip Segment: ${clip.title}\nTime Range: ${clip.startTime.toFixed(2)}s to ${clip.endTime.toFixed(2)}s (${clip.duration.toFixed(2)}s)\nViral Score: ${clip.viralScore}/100\nFormat: 9:16 Vertical H.264/AAC`);
+    }
+
+    // 4. Always add synchronized .SRT subtitle file for each clip
+    if (clip.subtitles && clip.subtitles.length > 0) {
+      const srtData = exportToSRT(clip.subtitles, clip.startTime);
+      zip.file(filename.replace(/\.mp4$/, '.srt'), srtData);
     }
   }
 

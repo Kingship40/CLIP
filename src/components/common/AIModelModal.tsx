@@ -83,6 +83,17 @@ export const AIModelModal: React.FC<AIModelModalProps> = ({ isOpen, onClose }) =
       },
     });
 
+    if (geminiKey.trim()) {
+      fetch('/api/gemini/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: geminiKey.trim(),
+          model: geminiModel,
+        }),
+      }).catch(() => {});
+    }
+
     addToast({
       title: 'AI Service Configured',
       message: `Active AI provider set to ${

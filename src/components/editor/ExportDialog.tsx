@@ -160,19 +160,25 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
         const exportSubtitles = shouldBurnCaptions ? subtitles : [];
 
-        // 0. If clip already has a final rendered subtitled MP4 (or clean video requested with originalVideoUrl)
-        const directDownloadUrl = (selectedFormat === 'mp4-burned' || selectedFormat === 'bundle')
-          ? (clip?.subtitledVideoUrl || videoSource)
-          : (clip?.originalVideoUrl || videoSource);
+        // 0. If clip is already rendered as an isolated MP4 (tokenized server endpoint or blob)
+        const renderedUrl = (selectedFormat === 'mp4-burned' || selectedFormat === 'bundle')
+          ? clip?.subtitledVideoUrl
+          : clip?.originalVideoUrl;
 
-        if (directDownloadUrl && (directDownloadUrl.startsWith('http://') || directDownloadUrl.startsWith('https://') || directDownloadUrl.startsWith('/api/media/clips/'))) {
+        const isAlreadyRendered = Boolean(
+          clip?.isRendered && renderedUrl && (
+            renderedUrl.startsWith('/api/media/clips/') || renderedUrl.startsWith('blob:')
+          )
+        );
+
+        if (isAlreadyRendered && renderedUrl) {
           addToast({
-            title: 'Downloading Subtitled MP4...',
-            message: 'Fetching rendered video with synchronized burned-in captions.',
+            title: 'Downloading Rendered Clip...',
+            message: 'Fetching trimmed video with synchronized audio.',
             type: 'info',
           });
           setExportProgress(50);
-          await downloadVideoFile(directDownloadUrl, `${safeName}_clip.mp4`);
+          await downloadVideoFile(renderedUrl, `${safeName}_clip.mp4`);
           setExportProgress(100);
 
           if (selectedFormat === 'bundle' && hasSpeech) {

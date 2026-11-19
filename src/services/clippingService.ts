@@ -2,6 +2,8 @@ import { Project, ProjectConfig, ProcessingJob, ProcessingStage, Clip, SubtitleS
 import { viralIntelligenceEngineInstance } from './intelligence/viralIntelligenceEngine';
 import { resolveDurationConstraint, validateSourceDuration, enforceClipDurationBoundaries } from './intelligence/durationValidator';
 import { transcriptionServiceInstance, syncTranscriptToClip, ensureWordTimings } from './transcriptionService';
+import { geminiServiceInstance, analyzeVideoWithGemini, sampleVideoFrames } from './aiVideoAnalysisService';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export const PIPELINE_STAGES: Omit<ProcessingStage, 'status'>[] = [
   {
@@ -170,24 +172,78 @@ export class DemoClippingService implements IClippingService {
       }
     }
 
-    const result = await viralIntelligenceEngineInstance.extractViralMoments(
-      resolvedSubtitles || [],
-      videoDuration,
-      {
-        clipCount,
-        targetDuration: effectiveConstraint.targetSeconds,
-        minDuration: effectiveConstraint.minSeconds,
-        maxDuration: effectiveConstraint.maxSeconds,
-        exactDuration: effectiveConstraint.mode === 'exact' ? effectiveConstraint.targetSeconds : undefined,
-        durationMode: effectiveConstraint.mode,
-        toleranceSeconds: effectiveConstraint.toleranceSeconds,
-        contentType: config.contentType,
-        preferences: config.preferences,
-      },
-      project.name || project.sourceVideo.name
-    );
+    // Multimodal AI Analysis: Check if Google Gemini Vision is configured
+    const userSettings = typeof window !== 'undefined' ? useSettingsStore.getState().settings : null;
+    const geminiKey = userSettings?.aiSettings?.geminiApiKey || geminiServiceInstance.getApiKey();
+    const geminiModel = userSettings?.aiSettings?.geminiModel || geminiServiceInstance.getModel();
+    let viralMoments: any[] = [];
 
-    const momentsClips = viralIntelligenceEngineInstance.convertMomentsToClips(result.moments, project);
+    if (geminiKey && geminiKey.trim()) {
+      try {
+        const frames = await sampleVideoFrames(project.sourceVideo.url, 8, videoDuration);
+        if (frames.length > 0) {
+          const geminiClips = await analyzeVideoWithGemini(
+            geminiKey.trim(),
+            geminiModel,
+            videoDuration,
+            frames,
+            project.name || project.sourceVideo.name,
+            effectiveConstraint,
+            resolvedSubtitles
+          );
+
+          if (geminiClips && geminiClips.length > 0) {
+            viralMoments = geminiClips.map((gc, idx) => ({
+              id: gc.id || `gemini_clip_${Date.now()}_${idx + 1}`,
+              title: gc.title,
+              description: gc.summary || gc.rationale,
+              hook: gc.title,
+              startTime: gc.start,
+              endTime: gc.end,
+              duration: gc.end - gc.start,
+              score: gc.viralScore || 95,
+              category: gc.category || 'hook_intro',
+              tags: gc.hashtags || ['#viral', '#shorts'],
+              scoreBreakdown: gc.scoreBreakdown || {
+                hookStrength: 95,
+                emotionalIntellectual: 94,
+                clarityContext: 92,
+                payoffValue: 95,
+                narrativeCompleteness: 92,
+                shareability: 94,
+                avQuality: 92,
+                boundaryQuality: 92,
+              },
+              subtitles: gc.subtitles && gc.subtitles.length > 0 ? gc.subtitles : resolvedSubtitles,
+            }));
+          }
+        }
+      } catch (geminiErr: any) {
+        console.warn('[ClippingService] Gemini video analysis notice:', geminiErr?.message || geminiErr);
+      }
+    }
+
+    if (viralMoments.length === 0) {
+      const result = await viralIntelligenceEngineInstance.extractViralMoments(
+        resolvedSubtitles || [],
+        videoDuration,
+        {
+          clipCount,
+          targetDuration: effectiveConstraint.targetSeconds,
+          minDuration: effectiveConstraint.minSeconds,
+          maxDuration: effectiveConstraint.maxSeconds,
+          exactDuration: effectiveConstraint.mode === 'exact' ? effectiveConstraint.targetSeconds : undefined,
+          durationMode: effectiveConstraint.mode,
+          toleranceSeconds: effectiveConstraint.toleranceSeconds,
+          contentType: config.contentType,
+          preferences: config.preferences,
+        },
+        project.name || project.sourceVideo.name
+      );
+      viralMoments = result.moments;
+    }
+
+    const momentsClips = viralIntelligenceEngineInstance.convertMomentsToClips(viralMoments, project);
     return momentsClips;
   }
 

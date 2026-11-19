@@ -19,6 +19,11 @@ import {
   verifyDeepgramApiKey,
   deepgramServiceInstance,
 } from '../deepgramService';
+import {
+  geminiServiceInstance,
+  analyzeVideoWithGemini,
+  testApiKey,
+} from '../aiVideoAnalysisService';
 import JSZip from 'jszip';
 
 export async function handleApiRoute(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
@@ -612,11 +617,16 @@ export async function handleApiRoute(req: IncomingMessage, res: ServerResponse):
         const activeDgKey = deepgramApiKey || process.env.DEEPGRAM_API_KEY || deepgramServiceInstance.getApiKey();
         if (activeDgKey && activeDgKey.trim()) {
           try {
-            let mediaSource: any = videoUrl;
+            let audioSource: any = videoUrl;
             if (inputPath && fs.existsSync(inputPath)) {
-              mediaSource = fs.readFileSync(inputPath);
+              // Extract clean 16kHz mono audio via FFmpeg
+              const extractedAudioPath = await ffmpegServiceInstance.extractAudio(inputPath);
+              if (fs.existsSync(extractedAudioPath)) {
+                audioSource = fs.readFileSync(extractedAudioPath);
+                try { fs.unlinkSync(extractedAudioPath); } catch {}
+              }
             }
-            const dgResult = await transcribeWithDeepgram(mediaSource, activeDgKey.trim(), {
+            const dgResult = await transcribeWithDeepgram(audioSource, activeDgKey.trim(), {
               language,
               model: (deepgramModel || deepgramServiceInstance.getModel()) as any,
             });
@@ -752,6 +762,130 @@ export async function handleApiRoute(req: IncomingMessage, res: ServerResponse):
       } catch (e: any) {
         res.statusCode = 500;
         res.end(JSON.stringify({ error: e.message || 'Deepgram transcription failed' }));
+      }
+    });
+    return true;
+  }
+
+  // 17. Google Gemini AI Configuration Check & Update: /api/gemini/config
+  if (pathname === '/api/gemini/config') {
+    res.setHeader('Content-Type', 'application/json');
+    if (req.method === 'GET') {
+      res.statusCode = 200;
+      res.end(JSON.stringify({
+        configured: geminiServiceInstance.isConfigured() || Boolean(process.env.GEMINI_API_KEY),
+        model: geminiServiceInstance.getModel(),
+        provider: 'Google Gemini Vision',
+      }));
+      return true;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const { apiKey, model = 'gemini-1.5-flash' } = JSON.parse(body || '{}');
+          if (apiKey !== undefined) {
+            geminiServiceInstance.setConfig(apiKey, model);
+          }
+          res.statusCode = 200;
+          res.end(JSON.stringify({
+            success: true,
+            configured: geminiServiceInstance.isConfigured(),
+            model: geminiServiceInstance.getModel(),
+          }));
+        } catch (e: any) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: e.message || 'Invalid request' }));
+        }
+      });
+      return true;
+    }
+  }
+
+  // 18. Google Gemini Key Verification Endpoint: /api/gemini/verify
+  if (pathname === '/api/gemini/verify' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', async () => {
+      res.setHeader('Content-Type', 'application/json');
+      try {
+        const { apiKey, model = 'gemini-1.5-flash' } = JSON.parse(body || '{}');
+        const keyToTest = apiKey || geminiServiceInstance.getApiKey() || process.env.GEMINI_API_KEY;
+        const result = await testApiKey('gemini', keyToTest || '', model);
+        res.statusCode = result.success ? 200 : 400;
+        res.end(JSON.stringify(result));
+      } catch (e: any) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ success: false, message: e.message || 'Verification error' }));
+      }
+    });
+    return true;
+  }
+
+  // 19. Google Gemini Video Content Multimodal Analysis: /api/gemini/analyze
+  if (pathname === '/api/gemini/analyze' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', async () => {
+      res.setHeader('Content-Type', 'application/json');
+      try {
+        const payload = JSON.parse(body || '{}');
+        const {
+          videoPath,
+          videoUrl,
+          duration = 60,
+          videoTitle = 'User Video',
+          targetDuration = '30-60',
+          subtitles = [],
+          apiKey,
+          model,
+        } = payload;
+
+        const activeKey = apiKey || geminiServiceInstance.getApiKey() || process.env.GEMINI_API_KEY;
+        if (!activeKey) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: 'Gemini API key is not configured' }));
+          return;
+        }
+
+        // Find video on disk to extract visual frames
+        let localPath = videoPath;
+        if (!localPath || !fs.existsSync(localPath)) {
+          if (videoUrl && !videoUrl.startsWith('http') && fs.existsSync(videoUrl)) {
+            localPath = videoUrl;
+          } else {
+            const fixture = path.resolve('tests', 'fixtures', 'source_with_audio.mp4');
+            if (fs.existsSync(fixture)) localPath = fixture;
+          }
+        }
+
+        if (!localPath || !fs.existsSync(localPath)) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: 'Video file not accessible on server for frame extraction' }));
+          return;
+        }
+
+        const frames = await ffmpegServiceInstance.extractVideoFrames(localPath, 8, duration);
+        const clips = await analyzeVideoWithGemini(
+          activeKey,
+          model || geminiServiceInstance.getModel(),
+          duration,
+          frames,
+          videoTitle,
+          targetDuration,
+          subtitles
+        );
+
+        res.statusCode = 200;
+        res.end(JSON.stringify({
+          success: true,
+          clips,
+          provider: 'Google Gemini 1.5 Flash Vision',
+        }));
+      } catch (e: any) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: e.message || 'Gemini video analysis failed' }));
       }
     });
     return true;

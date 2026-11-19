@@ -76,6 +76,18 @@ export const SettingsPage: React.FC = () => {
       }).catch(() => {});
     }
 
+    // Synchronize Gemini API key and model with client service & backend
+    if (localSettings.aiSettings?.geminiApiKey) {
+      fetch('/api/gemini/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: localSettings.aiSettings.geminiApiKey,
+          model: localSettings.aiSettings.geminiModel,
+        }),
+      }).catch(() => {});
+    }
+
     addToast({
       title: 'Preferences Saved',
       message: 'Deepgram API credentials and subtitle style preferences saved.',

@@ -192,6 +192,7 @@ export function exportToVTT(subtitles: SubtitleSegment[], clipStartTime: number 
  * Browser file download triggers
  */
 export function downloadText(content: string, filename: string, mimeType = 'text/plain') {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -204,6 +205,7 @@ export function downloadText(content: string, filename: string, mimeType = 'text
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

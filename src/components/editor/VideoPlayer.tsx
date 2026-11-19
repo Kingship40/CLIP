@@ -50,6 +50,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [faceData, setFaceData] = useState<FaceCentroidResult | null>(null);
   const [showFaceHUD, setShowFaceHUD] = useState<boolean>(true);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
+  const lastFaceCheckRef = useRef<number>(0);
 
   // Sync video time when external timeline changes
   useEffect(() => {
@@ -94,13 +95,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const time = videoRef.current.currentTime;
     onTimeUpdate(time);
 
-    // AI Face-Tracking & Camera Gliding for 9:16 vertical shorts
+    // AI Face-Tracking & Camera Gliding for 9:16 vertical shorts (Throttled to maintain smooth 60fps playback)
+    const now = Date.now();
     const vElem = videoRef.current;
-    if (aspectRatio === '9:16' && vElem && vElem.readyState >= 2) {
+    if (aspectRatio === '9:16' && vElem && vElem.readyState >= 2 && now - lastFaceCheckRef.current > 500) {
+      lastFaceCheckRef.current = now;
       if (framingMode === 'auto') {
         detectSpeakerFaceAdvanced(vElem).then((detected) => {
           setFaceData(detected);
-          if (detected.confidence > 0.1) {
+          if (detected.confidence > 0.1 && Math.abs(detected.x - facePanX) > 2) {
             setFacePanX(detected.x);
             onFramingChange?.('auto', detected.x);
           }
@@ -108,7 +111,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           if (!videoRef.current) return;
           const detected = detectSpeakerFaceCentroid(videoRef.current, facePanX);
           setFaceData(detected);
-          if (detected.confidence > 0.1) {
+          if (detected.confidence > 0.1 && Math.abs(detected.x - facePanX) > 2) {
             const target = detected.x;
             setFacePanX((prev) => {
               const next = prev + (target - prev) * 0.18;
@@ -119,26 +122,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }
         });
       } else if (framingMode === 'left') {
-        setFacePanX((prev) => {
-          const next = prev + (25 - prev) * 0.25;
-          const rounded = Math.round(next * 10) / 10;
-          onFramingChange?.('left', rounded);
-          return rounded;
-        });
+        if (Math.abs(facePanX - 25) > 1) {
+          setFacePanX(25);
+          onFramingChange?.('left', 25);
+        }
       } else if (framingMode === 'center') {
-        setFacePanX((prev) => {
-          const next = prev + (50 - prev) * 0.25;
-          const rounded = Math.round(next * 10) / 10;
-          onFramingChange?.('center', rounded);
-          return rounded;
-        });
+        if (Math.abs(facePanX - 50) > 1) {
+          setFacePanX(50);
+          onFramingChange?.('center', 50);
+        }
       } else if (framingMode === 'right') {
-        setFacePanX((prev) => {
-          const next = prev + (75 - prev) * 0.25;
-          const rounded = Math.round(next * 10) / 10;
-          onFramingChange?.('right', rounded);
-          return rounded;
-        });
+        if (Math.abs(facePanX - 75) > 1) {
+          setFacePanX(75);
+          onFramingChange?.('right', 75);
+        }
       }
     }
 

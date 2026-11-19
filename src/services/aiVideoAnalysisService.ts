@@ -217,6 +217,36 @@ export async function testApiKey(
   }
 }
 
+export class GeminiService {
+  private apiKey: string = '';
+  private model: string = 'gemini-1.5-flash';
+
+  constructor() {
+    if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) {
+      this.apiKey = process.env.GEMINI_API_KEY;
+    }
+  }
+
+  public setConfig(key: string, model: string = 'gemini-1.5-flash'): void {
+    if (key !== undefined) this.apiKey = key.trim();
+    if (model) this.model = model;
+  }
+
+  public getApiKey(): string {
+    return this.apiKey || (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY || '' : '');
+  }
+
+  public getModel(): string {
+    return this.model || 'gemini-1.5-flash';
+  }
+
+  public isConfigured(): boolean {
+    return Boolean(this.getApiKey());
+  }
+}
+
+export const geminiServiceInstance = new GeminiService();
+
 /**
  * Calls Google Gemini Vision API to watch the video frames and extract viral short clips.
  */
@@ -226,19 +256,28 @@ export async function analyzeVideoWithGemini(
   duration: number,
   frames: VideoFrameSample[],
   videoTitle?: string,
-  durationConstraint?: DurationConstraint | string | number
+  durationConstraint?: DurationConstraint | string | number,
+  sourceSubtitles?: SubtitleSegment[]
 ): Promise<ExtractedAIClip[]> {
   const constraint = resolveDurationConstraint(durationConstraint);
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
+  const effectiveModel = model || 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:generateContent?key=${apiKey.trim()}`;
+
+  let transcriptContext = '';
+  if (sourceSubtitles && sourceSubtitles.length > 0) {
+    transcriptContext = `\nAudio Transcript with Timestamps:\n` +
+      sourceSubtitles.slice(0, 30).map((s) => `[${s.start.toFixed(1)}s - ${s.end.toFixed(1)}s]: "${s.text}"`).join('\n') +
+      '\n';
+  }
 
   const promptText = `
 You are a Lead AI Video Editor and viral content strategist analyzing a video (${videoTitle || 'User Uploaded Video'}, total duration: ${duration.toFixed(1)} seconds).
-You are given ${frames.length} chronological visual frames sampled across the video timeline.
+You are given ${frames.length} chronological visual frames sampled across the video timeline.${transcriptContext}
 
 Your job:
 1. Watch the video frames carefully and identify 3-4 diverse, high-retention short clips strictly respecting duration: ${constraint.label} (between ${constraint.minSeconds} and ${constraint.maxSeconds} seconds).
 2. Classify each clip into one of the 18 viral categories: "hook_intro", "revelation", "humor_punchline", "controversial_debate", "memorable_quote", "actionable_advice", "emotional_story", "relatable_frustration", "suspense_tension", "insightful_qa", "clear_explanation", "counterintuitive_fact", "mini_narrative", "motivational", "discussion_starter".
-3. For each clip, pinpoint the exact start and end timestamps ensuring the setup is included and ending on a complete punchline or conclusion (never cut mid-sentence). Clip duration MUST be between ${constraint.minSeconds}s and ${constraint.maxSeconds}s.
+3. For each clip, pinpoint the exact start and end timestamps ensuring the setup is included and ending on a complete punchline or conclusion (never cut mid-sentence). Clip duration MUST be between ${constraint.minSeconds}s and ${constraint.maxSeconds}s, and within 0.0s to ${duration.toFixed(1)}s.
 4. Write a scroll-stopping title for TikTok / YouTube Shorts / Instagram Reels.
 5. Provide overall viral score (80-99), rationale, and 8-factor score breakdown: hookStrength (0-100), emotionalIntellectual (0-100), clarityContext (0-100), payoffValue (0-100).
 
@@ -314,13 +353,25 @@ JSON Structure:
   const data = await response.json();
   const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-  // Clean JSON response
+  // Clean and robust JSON parsing
   const cleaned = rawText
     .replace(/^```json/gm, '')
     .replace(/^```/gm, '')
     .trim();
 
-  const parsed = JSON.parse(cleaned);
+  let parsed: any;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    const startIdx = cleaned.indexOf('[');
+    const endIdx = cleaned.lastIndexOf(']');
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      parsed = JSON.parse(cleaned.substring(startIdx, endIdx + 1));
+    } else {
+      throw new Error(`Failed to parse Gemini response as JSON: ${rawText.slice(0, 150)}...`);
+    }
+  }
+
   if (!Array.isArray(parsed) || parsed.length === 0) {
     throw new Error('Gemini did not return an array of clips.');
   }

@@ -96,7 +96,7 @@ export const ClipTimeline: React.FC<ClipTimelineProps> = ({
   });
 
   return (
-    <div className="bg-dark-900 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 select-none">
+    <div className="bg-[var(--bg-surface)] dark:bg-dark-900 border border-[var(--border)] dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 select-none shadow-sm">
       {/* Header Info: Start / End / Duration Readouts & Steppers */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-[var(--border)] dark:border-slate-800/80 pb-3">
         <div className="flex items-center gap-2">

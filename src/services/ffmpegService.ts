@@ -206,18 +206,25 @@ export class FFmpegService {
       if (targetRatio < sourceRatio) {
         // Cropping horizontal width (e.g. 16:9 into 9:16)
         cropW = Math.round(sourceH * targetRatio);
+        if (cropW % 2 !== 0) cropW -= 1;
         const panRatio = Math.max(0, Math.min(100, facePanX)) / 100;
-        const cropX = Math.round((sourceW - cropW) * panRatio);
+        let cropX = Math.round((sourceW - cropW) * panRatio);
+        if (cropX + cropW > sourceW) cropX = sourceW - cropW;
+        if (cropX < 0) cropX = 0;
         filterChain += `crop=${cropW}:${cropH}:${cropX}:0,scale=${targetW}:${targetH}`;
       } else {
         // Cropping vertical height
         cropH = Math.round(sourceW / targetRatio);
+        if (cropH % 2 !== 0) cropH -= 1;
         const cropY = Math.round((sourceH - cropH) / 2);
         filterChain += `crop=${cropW}:${cropH}:0:${cropY},scale=${targetW}:${targetH}`;
       }
     } else {
       filterChain += `scale=${targetW}:${targetH}`;
     }
+
+    // Normalize variable frame rates (VFR) to constant 30 FPS (CFR) and align presentation timestamps
+    filterChain += `,fps=fps=30:round=near,setpts=PTS-STARTPTS`;
 
     // 3. Generate and burn ASS hardcoded subtitles if present
     let tempAssPath: string | null = null;
@@ -294,7 +301,7 @@ export class FFmpegService {
     // Video filters
     args.push('-vf', filterChain);
 
-    // Stream Mapping
+    // Stream Mapping & Audio/Video Timestamp Synchronization
     if (hasAudio) {
       if (effectiveAudioSource !== inputVideoPath) {
         args.push('-map', '0:v:0', '-map', '1:a:0');
@@ -302,6 +309,7 @@ export class FFmpegService {
         args.push('-map', '0:v:0', '-map', '0:a:0');
       }
       args.push(
+        '-af', 'aresample=async=1000:first_pts=0,asetpts=PTS-STARTPTS',
         '-c:a', 'aac',
         '-b:a', '192k',
         '-ar', '44100',
@@ -311,12 +319,14 @@ export class FFmpegService {
       args.push('-map', '0:v:0');
     }
 
-    // Video encoding: H.264 High Profile, faststart for instant streaming
+    // Video encoding: H.264 High Profile, constant 30fps, faststart for instant playback
     args.push(
       '-c:v', 'libx264',
       '-preset', 'fast',
       '-crf', '20',
       '-pix_fmt', 'yuv420p',
+      '-r', '30',
+      '-max_muxing_queue_size', '1024',
       '-avoid_negative_ts', 'make_zero',
       '-movflags', '+faststart',
       outputVideoPath
@@ -427,6 +437,109 @@ export class FFmpegService {
     ];
     await execFileAsync(ffmpeg, args);
     return outputPath;
+  }
+
+  /**
+   * Extracts clean, speech-optimized audio from a video file for Deepgram transcription.
+   */
+  public async extractAudio(
+    videoPath: string,
+    outputAudioPath?: string,
+    startTime?: number,
+    duration?: number
+  ): Promise<string> {
+    if (!fs.existsSync(videoPath)) {
+      throw new Error(`Video file does not exist: ${videoPath}`);
+    }
+
+    const outPath = outputAudioPath || path.join(
+      path.dirname(videoPath),
+      `audio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.mp3`
+    );
+
+    const ffmpeg = this.getFFmpegBinary();
+    const args: string[] = ['-y'];
+
+    if (startTime !== undefined && startTime > 0) {
+      args.push('-ss', startTime.toFixed(3));
+    }
+    args.push('-i', videoPath);
+
+    if (duration !== undefined && duration > 0) {
+      args.push('-t', duration.toFixed(3));
+    }
+
+    // Extract audio as 16kHz mono MP3 or PCM WAV (optimal for Deepgram Nova-2)
+    args.push(
+      '-vn',
+      '-ac', '1',
+      '-ar', '16000',
+      '-c:a', outPath.endsWith('.wav') ? 'pcm_s16le' : 'libmp3lame',
+      '-q:a', '2',
+      outPath
+    );
+
+    await execFileAsync(ffmpeg, args);
+    return outPath;
+  }
+
+  /**
+   * Extracts representative chronological video frames across video duration
+   * for Gemini Multimodal Vision analysis.
+   */
+  public async extractVideoFrames(
+    videoPath: string,
+    frameCount: number = 8,
+    totalDuration?: number
+  ): Promise<Array<{ time: number; base64: string; cleanBase64: string }>> {
+    if (!fs.existsSync(videoPath)) {
+      throw new Error(`Video file does not exist: ${videoPath}`);
+    }
+
+    const probe = await this.probeMedia(videoPath);
+    const dur = totalDuration || probe.duration || 30;
+    const step = dur / (frameCount + 1);
+    const timestamps = Array.from({ length: frameCount }, (_, i) =>
+      Math.round((i + 1) * step * 10) / 10
+    );
+
+    const outDir = path.join(path.dirname(videoPath), `frames_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
+    fs.mkdirSync(outDir, { recursive: true });
+
+    const ffmpeg = this.getFFmpegBinary();
+    const frames: Array<{ time: number; base64: string; cleanBase64: string }> = [];
+
+    for (let i = 0; i < timestamps.length; i++) {
+      const t = timestamps[i];
+      const framePath = path.join(outDir, `frame_${i}.jpg`);
+      try {
+        await execFileAsync(ffmpeg, [
+          '-y',
+          '-ss', t.toFixed(3),
+          '-i', videoPath,
+          '-vframes', '1',
+          '-vf', 'scale=640:-1',
+          '-q:v', '3',
+          framePath,
+        ]);
+
+        if (fs.existsSync(framePath)) {
+          const buf = fs.readFileSync(framePath);
+          const cleanBase64 = buf.toString('base64');
+          frames.push({
+            time: t,
+            base64: `data:image/jpeg;base64,${cleanBase64}`,
+            cleanBase64,
+          });
+          try { fs.unlinkSync(framePath); } catch {}
+        }
+      } catch (err) {
+        console.warn(`[FFmpegService] Frame extraction at ${t}s failed:`, err);
+      }
+    }
+
+    try { fs.rmdirSync(outDir); } catch {}
+    return frames;
   }
 }
 
